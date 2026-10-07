@@ -18,5 +18,6 @@ func Api() {
 		registerUserRoutes(router)
 		registerRbacRoutes(router)
 		registerObatRoutes(router)
+		registerPasienRoutes(router)
 	})
 }
