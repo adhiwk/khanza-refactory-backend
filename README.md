@@ -1,4 +1,6 @@
 <div align="center">
+## About Khanza Refactory
+Refactory SIMRS Khanza to webapps, using goravel framework.
 
 <img src="https://www.goravel.dev/logo.png?v=1.14.x" width="300" alt="Logo">
 
