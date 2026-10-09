@@ -32,6 +32,7 @@ func (s *RbacSeeder) Run() error {
 			"users.view", "users.create", "users.update", "users.delete",
 			"roles.view", "roles.manage",
 			"patients.view", "patients.create", "patients.update", "patients.delete",
+			"registrations.view", "registrations.create", "registrations.update", "registrations.delete",
 		},
 		"dokter":  {"patients.view", "patients.update"},
 		"perawat": {"patients.view"},
