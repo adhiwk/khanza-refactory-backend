@@ -12,7 +12,7 @@ Database tetap skema Khanza (`sik.sql`) melalui koneksi `mysql_kedua`.
 | `app/support/errors.go` | `support.NotFound/Conflict/Invalid/Forbidden` — error bisnis dari Action |
 | `app/support/db.go` | `DB()`, `Transaction()` pada koneksi Khanza, deteksi error duplikat/FK |
 | `app/support/values.go` | `PageParams` (limit maks 500), parsing tanggal/jam, `Nullable` |
-| `app/repository/crud` | `Table[T,K]` persistence standar satu tabel (paginate/find/create/save/soft-delete) di-embed repository modul |
+| `app/repository/crud` | `Table[T,K]` persistence standar satu tabel (paginate/paginate+filter/find/create/save/soft-delete/set aktif) di-embed repository modul, termasuk obat & pasien |
 | `app/repository/perawatan` | `Konteks` registrasi (pasien, poli, penjab, billing, kamar aktif) dipakai modul pelayanan |
 | `app/services/jurnal` | Posting jurnal (`jurnal` + `detailjurnal`) dalam transaksi Action; validasi debet = kredit. Menggantikan tabel global `tampjurnal` Khanza yang rawan race |
 | `app/services/stok` | Mutasi stok obat: kunci `gudangbarang` (`FOR UPDATE`), tolak stok kurang, catat `riwayat_barang_medis`, `data_batch.sisa` bila batch aktif |
@@ -49,7 +49,8 @@ saat dihapus seperti form Khanza. Dokter wajib terdaftar sebagai pegawai (FK `pe
 | `/rujuk-masuk`, `/rujuk-keluar`, `/pasien-meninggal`, `/catatan-pasien` | DlgRujukMasuk, DlgRujuk, DlgPasienMati, DlgCatatan | `pelayanan.*` |
 
 ### Farmasi (`farmasi_master.*`) — `/farmasi/...`, `/obat`
-jenis, kategori, golongan, satuan, industri, metode-racik; `/obat` (databarang, modul lama — permission diperbaiki dari `users.*`).
+jenis, kategori, golongan, satuan, industri, metode-racik; `/obat/{kode_brng}` (databarang): hapus = nonaktif (`status='0'`) seperti DlgBarang,
+`PATCH /obat/{kode_brng}/status` untuk aktif/nonaktif, filter list `status`, `kdjns`, `kode_kategori`, `kode_golongan` (tanpa `status` = hanya aktif).
 
 ### Billing (`billing.*`) — `/billing/...`
 - `GET /billing/tagihan?no_rawat=` rincian per kategori (registrasi, tindakan ralan/ranap, obat, obat operasi, obat langsung,

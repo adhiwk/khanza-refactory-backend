@@ -1,124 +1,53 @@
+// Package obat use case master obat/alkes (DlgBarang, tabel databarang).
 package obat
 
 import (
-	"errors"
-	"math"
 	"strings"
-	"time"
 
-	obatModel "goravel/app/models/obat"
-	obatRepo "goravel/app/repository/obat"
+	request "goravel/app/http/requests/obat"
+	model "goravel/app/models/obat"
+	repo "goravel/app/repository/obat"
+	"goravel/app/support"
 )
 
 var (
-	ErrNotFound      = errors.New("data obat tidak ditemukan")
-	ErrAlreadyExists = errors.New("kode barang sudah digunakan")
-	ErrInvalidStatus = errors.New("status harus '0' atau '1'")
-	ErrInvalidExpire = errors.New("format expire harus YYYY-MM-DD")
+	ErrNotFound                = support.NotFound("data obat tidak ditemukan")
+	ErrAlreadyExists           = support.Conflict("kode barang sudah digunakan")
+	ErrKodesatuanNotFound      = support.NotFound("data satuan tidak ditemukan")
+	ErrJenisNotFound           = support.NotFound("data jenis obat tidak ditemukan")
+	ErrIndustrifarmasiNotFound = support.NotFound("data industri farmasi tidak ditemukan")
+	ErrKategoriBarangNotFound  = support.NotFound("data kategori obat tidak ditemukan")
+	ErrGolonganBarangNotFound  = support.NotFound("data golongan obat tidak ditemukan")
 )
 
-// ===== Request / Response =====
-
-type ListRequest struct {
-	Search       string `form:"search" json:"search"`
-	Status       string `form:"status" json:"status"`
-	Kdjns        string `form:"kdjns" json:"kdjns"`
-	KodeKategori string `form:"kode_kategori" json:"kode_kategori"`
-	KodeGolongan string `form:"kode_golongan" json:"kode_golongan"`
-	Page         int    `form:"page" json:"page"`
-	Limit        int    `form:"limit" json:"limit"`
+// Filter filter tambahan list obat; Status kosong = hanya obat aktif.
+type Filter struct {
+	Status       string
+	Kdjns        string
+	KodeKategori string
+	KodeGolongan string
 }
-
-type ListResponse struct {
-	Data []obatModel.Obat `json:"data"`
-	Meta Meta             `json:"meta"`
-}
-
-type Meta struct {
-	Page      int   `json:"page"`
-	Limit     int   `json:"limit"`
-	Total     int64 `json:"total"`
-	TotalPage int   `json:"total_page"`
-}
-
-// ObatRequest dipakai untuk create & update.
-// Expire dikirim sebagai string "YYYY-MM-DD" (boleh kosong / null).
-type ObatRequest struct {
-	KodeBrng     string  `form:"kode_brng" json:"kode_brng"`
-	NamaBrng     string  `form:"nama_brng" json:"nama_brng"`
-	KodeSatbesar string  `form:"kode_satbesar" json:"kode_satbesar"`
-	KodeSat      string  `form:"kode_sat" json:"kode_sat"`
-	LetakBarang  string  `form:"letak_barang" json:"letak_barang"`
-	Dasar        float64 `form:"dasar" json:"dasar"`
-	HBeli        float64 `form:"h_beli" json:"h_beli"`
-	Ralan        float64 `form:"ralan" json:"ralan"`
-	Kelas1       float64 `form:"kelas1" json:"kelas1"`
-	Kelas2       float64 `form:"kelas2" json:"kelas2"`
-	Kelas3       float64 `form:"kelas3" json:"kelas3"`
-	Utama        float64 `form:"utama" json:"utama"`
-	Vip          float64 `form:"vip" json:"vip"`
-	Vvip         float64 `form:"vvip" json:"vvip"`
-	BeliLuar     float64 `form:"beliluar" json:"beliluar"`
-	JualBebas    float64 `form:"jualbebas" json:"jualbebas"`
-	Karyawan     float64 `form:"karyawan" json:"karyawan"`
-	StokMinimal  float64 `form:"stokminimal" json:"stokminimal"`
-	Kdjns        string  `form:"kdjns" json:"kdjns"`
-	Isi          float64 `form:"isi" json:"isi"`
-	Kapasitas    float64 `form:"kapasitas" json:"kapasitas"`
-	Expire       *string `form:"expire" json:"expire"`
-	Status       string  `form:"status" json:"status"`
-	KodeIndustri string  `form:"kode_industri" json:"kode_industri"`
-	KodeKategori string  `form:"kode_kategori" json:"kode_kategori"`
-	KodeGolongan string  `form:"kode_golongan" json:"kode_golongan"`
-}
-
-// ===== Action =====
 
 type Action struct {
-	obatRepo obatRepo.Repository
+	repo repo.Repository
 }
 
-func NewAction(obatRepo obatRepo.Repository) *Action {
-	return &Action{obatRepo: obatRepo}
+func NewAction(repo repo.Repository) *Action {
+	return &Action{repo: repo}
 }
 
-func (a *Action) List(req ListRequest) (*ListResponse, error) {
-	if req.Page < 1 {
-		req.Page = 1
-	}
-	if req.Limit < 1 {
-		req.Limit = 10
-	}
-	if req.Limit > 100 {
-		req.Limit = 100
-	}
-
-	list, total, err := a.obatRepo.Paginate(obatRepo.Filter{
-		Search:       strings.TrimSpace(req.Search),
-		Status:       req.Status,
-		Kdjns:        req.Kdjns,
-		KodeKategori: req.KodeKategori,
-		KodeGolongan: req.KodeGolongan,
-		Page:         req.Page,
-		Limit:        req.Limit,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return &ListResponse{
-		Data: list,
-		Meta: Meta{
-			Page:      req.Page,
-			Limit:     req.Limit,
-			Total:     total,
-			TotalPage: int(math.Ceil(float64(total) / float64(req.Limit))),
-		},
-	}, nil
+func (a *Action) List(search string, f Filter, page, limit int) ([]model.Obat, int64, error) {
+	return a.repo.PaginateWhere(search, map[string]string{
+		"status":        f.Status,
+		"kdjns":         f.Kdjns,
+		"kode_kategori": f.KodeKategori,
+		"kode_golongan": f.KodeGolongan,
+	}, page, limit)
 }
 
-func (a *Action) Detail(kode string) (*obatModel.Obat, error) {
-	data, err := a.obatRepo.FindByKode(kode)
+// Detail obat aktif maupun nonaktif.
+func (a *Action) Detail(key string) (*model.Obat, error) {
+	data, err := a.repo.FindAny(key)
 	if err != nil {
 		return nil, err
 	}
@@ -128,10 +57,9 @@ func (a *Action) Detail(kode string) (*obatModel.Obat, error) {
 	return data, nil
 }
 
-func (a *Action) Create(req ObatRequest) (*obatModel.Obat, error) {
-	req.KodeBrng = strings.TrimSpace(req.KodeBrng)
-
-	exists, err := a.obatRepo.ExistsByKode(req.KodeBrng)
+func (a *Action) Create(req request.StoreRequest) (*model.Obat, error) {
+	key := strings.TrimSpace(req.KodeBrng)
+	exists, err := a.repo.Exists(key)
 	if err != nil {
 		return nil, err
 	}
@@ -139,108 +67,107 @@ func (a *Action) Create(req ObatRequest) (*obatModel.Obat, error) {
 		return nil, ErrAlreadyExists
 	}
 
-	data := &obatModel.Obat{KodeBrng: req.KodeBrng}
-	if err := fill(data, req); err != nil {
+	data := &model.Obat{KodeBrng: key, Status: "1"}
+	if err := a.fill(data, req.Data); err != nil {
 		return nil, err
 	}
-
-	if err := a.obatRepo.Create(data); err != nil {
+	if err := a.repo.Create(data); err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-// Update: kode_brng (primary key) tidak bisa diubah, diambil dari URL.
-func (a *Action) Update(kode string, req ObatRequest) (*obatModel.Obat, error) {
-	data, err := a.Detail(kode)
+func (a *Action) Update(key string, d request.Data) (*model.Obat, error) {
+	data, err := a.Detail(key)
 	if err != nil {
 		return nil, err
 	}
-
-	if err := fill(data, req); err != nil {
+	if err := a.fill(data, d); err != nil {
 		return nil, err
 	}
-
-	if err := a.obatRepo.Save(data); err != nil {
+	if err := a.repo.Save(data); err != nil {
 		return nil, err
 	}
 	return data, nil
 }
 
-func (a *Action) Delete(kode string) error {
-	affected, err := a.obatRepo.Delete(kode)
+// Delete menonaktifkan (status=0) sesuai form Khanza.
+func (a *Action) Delete(key string) error {
+	data, err := a.Detail(key)
 	if err != nil {
 		return err
 	}
-	if affected == 0 {
+	if data.Status != "1" {
 		return ErrNotFound
 	}
-	return nil
+	return a.repo.Delete(key)
 }
 
-func (a *Action) UpdateStatus(kode string, status string) (*obatModel.Obat, error) {
-	if status != "0" && status != "1" {
-		return nil, ErrInvalidStatus
-	}
-
-	if _, err := a.Detail(kode); err != nil {
+// UpdateStatus mengaktifkan / menonaktifkan obat.
+func (a *Action) UpdateStatus(key, status string) (*model.Obat, error) {
+	if _, err := a.Detail(key); err != nil {
 		return nil, err
 	}
-
-	if _, err := a.obatRepo.UpdateStatus(kode, status); err != nil {
+	if err := a.repo.SetActive(key, status); err != nil {
 		return nil, err
 	}
-	return a.Detail(kode)
+	return a.Detail(key)
 }
 
-// ===== helper =====
-
-func fill(data *obatModel.Obat, req ObatRequest) error {
-	if req.Status != "0" && req.Status != "1" {
-		return ErrInvalidStatus
+func (a *Action) fill(m *model.Obat, d request.Data) error {
+	refs := []struct {
+		value string
+		check func(any) (bool, error)
+		err   error
+	}{
+		{d.KodeSatbesar, a.repo.KodesatuanExists, ErrKodesatuanNotFound},
+		{d.KodeSat, a.repo.KodesatuanExists, ErrKodesatuanNotFound},
+		{d.Kdjns, a.repo.JenisExists, ErrJenisNotFound},
+		{d.KodeIndustri, a.repo.IndustrifarmasiExists, ErrIndustrifarmasiNotFound},
+		{d.KodeKategori, a.repo.KategoriBarangExists, ErrKategoriBarangNotFound},
+		{d.KodeGolongan, a.repo.GolonganBarangExists, ErrGolonganBarangNotFound},
 	}
-
-	expire, err := parseDate(req.Expire)
+	for _, r := range refs {
+		v := strings.TrimSpace(r.value)
+		if v == "" {
+			continue
+		}
+		ok, err := r.check(v)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return r.err
+		}
+	}
+	expire, err := support.ParseDate(d.Expire)
 	if err != nil {
 		return err
 	}
 
-	data.NamaBrng = req.NamaBrng
-	data.KodeSatbesar = req.KodeSatbesar
-	data.KodeSat = req.KodeSat
-	data.LetakBarang = req.LetakBarang
-	data.Dasar = req.Dasar
-	data.HBeli = req.HBeli
-	data.Ralan = req.Ralan
-	data.Kelas1 = req.Kelas1
-	data.Kelas2 = req.Kelas2
-	data.Kelas3 = req.Kelas3
-	data.Utama = req.Utama
-	data.Vip = req.Vip
-	data.Vvip = req.Vvip
-	data.BeliLuar = req.BeliLuar
-	data.JualBebas = req.JualBebas
-	data.Karyawan = req.Karyawan
-	data.StokMinimal = req.StokMinimal
-	data.Kdjns = req.Kdjns
-	data.Isi = req.Isi
-	data.Kapasitas = req.Kapasitas
-	data.Expire = expire
-	data.Status = req.Status
-	data.KodeIndustri = req.KodeIndustri
-	data.KodeKategori = req.KodeKategori
-	data.KodeGolongan = req.KodeGolongan
-
+	m.NamaBrng = strings.TrimSpace(d.NamaBrng)
+	m.KodeSatbesar = strings.TrimSpace(d.KodeSatbesar)
+	m.KodeSat = strings.TrimSpace(d.KodeSat)
+	m.LetakBarang = strings.TrimSpace(d.LetakBarang)
+	m.Dasar = d.Dasar
+	m.HBeli = d.HBeli
+	m.Ralan = d.Ralan
+	m.Kelas1 = d.Kelas1
+	m.Kelas2 = d.Kelas2
+	m.Kelas3 = d.Kelas3
+	m.Utama = d.Utama
+	m.Vip = d.Vip
+	m.Vvip = d.Vvip
+	m.BeliLuar = d.BeliLuar
+	m.JualBebas = d.JualBebas
+	m.Karyawan = d.Karyawan
+	m.StokMinimal = d.StokMinimal
+	m.Kdjns = strings.TrimSpace(d.Kdjns)
+	m.Isi = d.Isi
+	m.Kapasitas = d.Kapasitas
+	m.Expire = expire
+	m.KodeIndustri = strings.TrimSpace(d.KodeIndustri)
+	m.KodeKategori = strings.TrimSpace(d.KodeKategori)
+	m.KodeGolongan = strings.TrimSpace(d.KodeGolongan)
 	return nil
-}
-
-func parseDate(s *string) (*time.Time, error) {
-	if s == nil || strings.TrimSpace(*s) == "" {
-		return nil, nil
-	}
-	t, err := time.Parse("2006-01-02", strings.TrimSpace(*s))
-	if err != nil {
-		return nil, ErrInvalidExpire
-	}
-	return &t, nil
 }

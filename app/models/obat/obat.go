@@ -37,7 +37,3 @@ type Obat struct {
 func (Obat) TableName() string {
 	return "databarang"
 }
-
-func (Obat) Connection() string {
-	return "mysql_kedua"
-}
