@@ -1,50 +1,46 @@
+// Package pasien use case data pasien (DlgPasien).
 package pasien
 
 import (
 	"strings"
-	"time"
 
-	pasienrequest "goravel/app/http/requests/pasien"
-	pasienmodel "goravel/app/models/pasien"
-	pasienrepo "goravel/app/repository/pasien"
+	request "goravel/app/http/requests/pasien"
+	model "goravel/app/models/pasien"
+	repo "goravel/app/repository/pasien"
 	"goravel/app/support"
 )
 
 var (
 	ErrNotFound      = support.NotFound("data pasien tidak ditemukan")
 	ErrAlreadyExists = support.Conflict("no rekam medis sudah digunakan")
-	ErrInvalidDate   = support.Invalid("format tanggal harus YYYY-MM-DD")
 )
 
 type Action struct {
-	repo pasienrepo.Repository
+	repo repo.Repository
 }
 
-func NewAction(repo pasienrepo.Repository) *Action {
-	return &Action{
-		repo: repo,
-	}
+func NewAction(repo repo.Repository) *Action {
+	return &Action{repo: repo}
 }
 
-func (a *Action) List(search string, page, limit int) ([]pasienmodel.Pasien, int64, error) {
-	return a.repo.GetPaginated(strings.TrimSpace(search), page, limit)
+func (a *Action) List(search string, page, limit int) ([]model.Pasien, int64, error) {
+	return a.repo.Paginate(search, page, limit)
 }
 
-func (a *Action) Detail(noRkmMedis string) (*pasienmodel.Pasien, error) {
-	pasien, err := a.repo.FindByNoRkmMedis(noRkmMedis)
+func (a *Action) Detail(key string) (*model.Pasien, error) {
+	data, err := a.repo.Find(key)
 	if err != nil {
 		return nil, err
 	}
-	if pasien == nil {
+	if data == nil {
 		return nil, ErrNotFound
 	}
-	return pasien, nil
+	return data, nil
 }
 
-func (a *Action) Create(noRkmMedis string, data pasienrequest.PasienData) (*pasienmodel.Pasien, error) {
-	noRkmMedis = strings.TrimSpace(noRkmMedis)
-
-	exists, err := a.repo.ExistsByNoRkmMedis(noRkmMedis)
+func (a *Action) Create(req request.StoreRequest) (*model.Pasien, error) {
+	key := strings.TrimSpace(req.NoRkmMedis)
+	exists, err := a.repo.Exists(key)
 	if err != nil {
 		return nil, err
 	}
@@ -52,107 +48,113 @@ func (a *Action) Create(noRkmMedis string, data pasienrequest.PasienData) (*pasi
 		return nil, ErrAlreadyExists
 	}
 
-	pasien := &pasienmodel.Pasien{NoRkmMedis: noRkmMedis}
-	if err := fill(pasien, data); err != nil {
+	data := &model.Pasien{NoRkmMedis: key}
+	if err := a.fill(data, req.Data); err != nil {
 		return nil, err
 	}
-	if pasien.TglDaftar == nil {
-		today := time.Now().Truncate(24 * time.Hour)
-		pasien.TglDaftar = &today
+	if data.TglDaftar == nil {
+		today := support.Today()
+		data.TglDaftar = &today
 	}
-
-	err = a.repo.Create(pasien)
-	return pasien, err
+	if err := a.repo.Create(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
-func (a *Action) Update(noRkmMedis string, data pasienrequest.PasienData) (*pasienmodel.Pasien, error) {
-	pasien, err := a.Detail(noRkmMedis)
+func (a *Action) Update(key string, d request.Data) (*model.Pasien, error) {
+	data, err := a.Detail(key)
 	if err != nil {
 		return nil, err
 	}
-
-	if err := fill(pasien, data); err != nil {
+	if err := a.fill(data, d); err != nil {
 		return nil, err
 	}
-
-	err = a.repo.Update(pasien)
-	return pasien, err
+	if err := a.repo.Save(data); err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
-func (a *Action) Delete(noRkmMedis string) error {
-	if _, err := a.Detail(noRkmMedis); err != nil {
+// Delete menghapus permanen sesuai DlgPasien.
+func (a *Action) Delete(key string) error {
+	if _, err := a.Detail(key); err != nil {
 		return err
 	}
-	return a.repo.Delete(noRkmMedis)
+	return a.repo.Delete(key)
 }
 
-// fill menyalin data request ke model; tgl_daftar yang kosong tidak menimpa nilai lama.
-func fill(p *pasienmodel.Pasien, d pasienrequest.PasienData) error {
-	tglLahir, err := parseDate(d.TglLahir)
+// fill menyalin data request ke model; tgl_daftar kosong tidak menimpa nilai lama.
+func (a *Action) fill(m *model.Pasien, d request.Data) error {
+	refs := []struct {
+		table, column string
+		value         any
+		label         string
+	}{
+		{"penjab", "kd_pj", strings.TrimSpace(d.KdPj), "jenis bayar"},
+		{"kelurahan", "kd_kel", d.KdKel, "kelurahan"},
+		{"kecamatan", "kd_kec", d.KdKec, "kecamatan"},
+		{"kabupaten", "kd_kab", d.KdKab, "kabupaten"},
+		{"propinsi", "kd_prop", d.KdProp, "propinsi"},
+		{"perusahaan_pasien", "kode_perusahaan", strings.TrimSpace(d.PerusahaanPasien), "instansi/perusahaan pasien"},
+		{"suku_bangsa", "id", d.SukuBangsa, "suku bangsa"},
+		{"bahasa_pasien", "id", d.BahasaPasien, "bahasa pasien"},
+		{"cacat_fisik", "id", d.CacatFisik, "cacat fisik"},
+	}
+	for _, r := range refs {
+		ok, err := a.repo.RefExists(r.table, r.column, r.value)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return support.NotFound("data " + r.label + " tidak ditemukan")
+		}
+	}
+	tglLahir, err := support.ParseDate(d.TglLahir)
 	if err != nil {
 		return err
 	}
-	tglDaftar, err := parseDate(d.TglDaftar)
+	tglDaftar, err := support.ParseDate(d.TglDaftar)
 	if err != nil {
 		return err
 	}
 
-	p.NmPasien = nullable(d.NmPasien)
-	p.NoKtp = nullable(d.NoKtp)
-	p.Jk = nullable(d.Jk)
-	p.TmpLahir = nullable(d.TmpLahir)
-	p.TglLahir = tglLahir
-	p.NmIbu = d.NmIbu
-	p.Alamat = nullable(d.Alamat)
-	p.GolDarah = nullable(d.GolDarah)
-	p.Pekerjaan = nullable(d.Pekerjaan)
-	p.SttsNikah = nullable(d.SttsNikah)
-	p.Agama = nullable(d.Agama)
+	m.NmPasien = support.Nullable(d.NmPasien)
+	m.NoKtp = support.Nullable(d.NoKtp)
+	m.Jk = support.Nullable(d.Jk)
+	m.TmpLahir = support.Nullable(d.TmpLahir)
+	m.TglLahir = tglLahir
+	m.NmIbu = strings.TrimSpace(d.NmIbu)
+	m.Alamat = support.Nullable(d.Alamat)
+	m.GolDarah = support.Nullable(d.GolDarah)
+	m.Pekerjaan = support.Nullable(d.Pekerjaan)
+	m.SttsNikah = support.Nullable(d.SttsNikah)
+	m.Agama = support.Nullable(d.Agama)
 	if tglDaftar != nil {
-		p.TglDaftar = tglDaftar
+		m.TglDaftar = tglDaftar
 	}
-	p.NoTlp = nullable(d.NoTlp)
-	p.Umur = d.Umur
-	p.Pnd = d.Pnd
-	p.Keluarga = nullable(d.Keluarga)
-	p.NamaKeluarga = d.NamaKeluarga
-	p.KdPj = d.KdPj
-	p.NoPeserta = nullable(d.NoPeserta)
-	p.KdKel = d.KdKel
-	p.KdKec = d.KdKec
-	p.KdKab = d.KdKab
-	p.PekerjaanPj = d.PekerjaanPj
-	p.AlamatPj = d.AlamatPj
-	p.KelurahanPj = d.KelurahanPj
-	p.KecamatanPj = d.KecamatanPj
-	p.KabupatenPj = d.KabupatenPj
-	p.PerusahaanPasien = d.PerusahaanPasien
-	p.SukuBangsa = d.SukuBangsa
-	p.BahasaPasien = d.BahasaPasien
-	p.CacatFisik = d.CacatFisik
-	p.Email = d.Email
-	p.Nip = d.Nip
-	p.KdProp = d.KdProp
-	p.PropinsiPj = d.PropinsiPj
+	m.NoTlp = support.Nullable(d.NoTlp)
+	m.Umur = strings.TrimSpace(d.Umur)
+	m.Pnd = d.Pnd
+	m.Keluarga = support.Nullable(d.Keluarga)
+	m.NamaKeluarga = strings.TrimSpace(d.NamaKeluarga)
+	m.KdPj = strings.TrimSpace(d.KdPj)
+	m.NoPeserta = support.Nullable(d.NoPeserta)
+	m.KdKel = d.KdKel
+	m.KdKec = d.KdKec
+	m.KdKab = d.KdKab
+	m.PekerjaanPj = strings.TrimSpace(d.PekerjaanPj)
+	m.AlamatPj = strings.TrimSpace(d.AlamatPj)
+	m.KelurahanPj = strings.TrimSpace(d.KelurahanPj)
+	m.KecamatanPj = strings.TrimSpace(d.KecamatanPj)
+	m.KabupatenPj = strings.TrimSpace(d.KabupatenPj)
+	m.PerusahaanPasien = strings.TrimSpace(d.PerusahaanPasien)
+	m.SukuBangsa = d.SukuBangsa
+	m.BahasaPasien = d.BahasaPasien
+	m.CacatFisik = d.CacatFisik
+	m.Email = strings.TrimSpace(d.Email)
+	m.Nip = strings.TrimSpace(d.Nip)
+	m.KdProp = d.KdProp
+	m.PropinsiPj = strings.TrimSpace(d.PropinsiPj)
 	return nil
-}
-
-func nullable(s string) *string {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil
-	}
-	return &s
-}
-
-func parseDate(s string) (*time.Time, error) {
-	s = strings.TrimSpace(s)
-	if s == "" {
-		return nil, nil
-	}
-	t, err := time.Parse("2006-01-02", s)
-	if err != nil {
-		return nil, ErrInvalidDate
-	}
-	return &t, nil
 }
