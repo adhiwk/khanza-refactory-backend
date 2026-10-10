@@ -51,6 +51,7 @@ type Repository interface {
 	Save(data *regmodel.RegPeriksa) error
 	Delete(noRawat string) error
 	UpdateUmurPasien(noRkmMedis string) error
+	EnsurePoli(kdPoli, nmPoli string) error
 }
 
 type repository struct{}
@@ -89,7 +90,7 @@ func (r *repository) Paginate(filter Filter) ([]regmodel.RegPeriksaView, int64, 
 		return nil, 0, err
 	}
 
-	var list []regmodel.RegPeriksaView
+	list := []regmodel.RegPeriksaView{}
 	err = q.Select("reg_periksa.*", "dokter.nm_dokter", "pasien.nm_pasien", "pasien.jk", "pasien.no_tlp", "poliklinik.nm_poli", "penjab.png_jawab").
 		Order("reg_periksa.tgl_registrasi desc, reg_periksa.jam_reg desc").
 		Offset((filter.Page - 1) * filter.Limit).Limit(filter.Limit).
@@ -114,7 +115,7 @@ func (r *repository) FindByNoRawat(noRawat string) (*regmodel.RegPeriksa, error)
 
 // FindPasien mengembalikan (nil, nil) bila pasien tidak ditemukan
 func (r *repository) FindPasien(noRkmMedis string) (*PasienInfo, error) {
-	var list []PasienInfo
+	list := []PasienInfo{}
 	err := r.query().Raw("select pasien.no_rkm_medis,pasien.tgl_lahir,pasien.tgl_daftar,"+
 		"concat_ws(', ',pasien.alamat,kelurahan.nm_kel,kecamatan.nm_kec,kabupaten.nm_kab) as asal,"+
 		"pasien.namakeluarga,ifnull(pasien.keluarga,'') as keluarga,pasien.kd_pj from pasien "+
@@ -234,5 +235,11 @@ func (r *repository) UpdateUmurPasien(noRkmMedis string) error {
 		"CONCAT(TIMESTAMPDIFF(DAY, DATE_ADD(DATE_ADD(tgl_lahir,INTERVAL TIMESTAMPDIFF(YEAR, tgl_lahir, CURDATE()) YEAR), "+
 		"INTERVAL TIMESTAMPDIFF(MONTH, tgl_lahir, CURDATE()) - ((TIMESTAMPDIFF(MONTH, tgl_lahir, CURDATE()) div 12) * 12) MONTH), CURDATE()), ' Hr')) "+
 		"where no_rkm_medis=?", noRkmMedis)
+	return err
+}
+
+// EnsurePoli membuat poliklinik bila belum ada (DlgIGD membuat unit IGDK otomatis).
+func (r *repository) EnsurePoli(kdPoli, nmPoli string) error {
+	_, err := r.query().Exec("insert ignore into poliklinik (kd_poli,nm_poli,registrasi,registrasilama,status) values (?,?,0,0,'1')", kdPoli, nmPoli)
 	return err
 }

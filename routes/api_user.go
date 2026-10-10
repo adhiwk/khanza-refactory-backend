@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"goravel/app/modules/rbac"
 	"goravel/app/http/controllers/user"
+	"goravel/app/modules/rbac"
 
 	"github.com/goravel/framework/contracts/route"
 )
