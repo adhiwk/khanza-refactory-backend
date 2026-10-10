@@ -42,7 +42,7 @@ func FormatLaravelPagination(ctx http.Context, data interface{}, page, limit int
 
 	// 2. Ambil base URL secara aman dari konfigurasi app.url dan path request saat ini
 	appUrl := facades.Config().GetString("app.url", "http://localhost:3000")
-	currentPath := ctx.Request().Url() // contoh: /api/v1/proyek
+	currentPath := ctx.Request().Path() // tanpa query string, contoh: /api/v1/proyek
 
 	baseUrl := fmt.Sprintf("%s%s", appUrl, currentPath)
 

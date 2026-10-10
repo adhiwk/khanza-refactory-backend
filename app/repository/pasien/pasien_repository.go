@@ -43,7 +43,7 @@ func (r *repository) ExistsByNoRkmMedis(noRkmMedis string) (bool, error) {
 
 // GetPaginated mencari di no_rkm_medis / nm_pasien / no_ktp / no_peserta bila search diisi
 func (r *repository) GetPaginated(search string, page, limit int) ([]pasienmodel.Pasien, int64, error) {
-	var list []pasienmodel.Pasien
+	list := []pasienmodel.Pasien{}
 	var total int64
 
 	q := facades.Orm().Query().Model(&pasienmodel.Pasien{})
