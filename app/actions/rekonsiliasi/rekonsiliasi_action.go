@@ -2,13 +2,16 @@
 package rekonsiliasi
 
 import (
+	"fmt"
 	"strings"
 	"time"
 
 	contractsorm "github.com/goravel/framework/contracts/database/orm"
 
+	cetakmodel "goravel/app/models/cetak"
 	model "goravel/app/models/rekonsiliasi"
 	repo "goravel/app/repository/rekonsiliasi"
+	cetaksvc "goravel/app/services/cetak"
 	"goravel/app/support"
 )
 
@@ -31,11 +34,48 @@ type Actor struct {
 }
 
 type Action struct {
-	repo repo.Repository
+	repo  repo.Repository
+	cetak *cetaksvc.Service
 }
 
-func NewAction(repo repo.Repository) *Action {
-	return &Action{repo: repo}
+func NewAction(repo repo.Repository, cetak *cetaksvc.Service) *Action {
+	return &Action{repo: repo, cetak: cetak}
+}
+
+// Cetak lembar rekonsiliasi obat (rptDataRekonsiliasiObat).
+func (a *Action) Cetak(no string) (*cetakmodel.Dokumen, error) {
+	r, err := a.Detail(no)
+	if err != nil {
+		return nil, err
+	}
+	dok, err := a.cetak.Dokumen("Rekonsiliasi Obat", r.NoRekonsiliasi)
+	if err != nil {
+		return nil, err
+	}
+	if dok.Identitas, err = a.cetak.IdentitasRawat(r.NoRawat); err != nil {
+		return nil, err
+	}
+	f := cetaksvc.Format
+	dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: "Data Rekonsiliasi", Baris: []cetakmodel.Baris{
+		{Label: "Tanggal Wawancara", Nilai: f(r.TanggalWawancara)}, {Label: "Rekonsiliasi Saat", Nilai: f(r.RekonsiliasiObatSaat)},
+		{Label: "Alergi Obat", Nilai: f(r.AlergiObat)}, {Label: "Manifestasi Alergi", Nilai: f(r.ManifestasiAlergi)},
+		{Label: "Dampak Alergi", Nilai: f(r.DampakAlergi)},
+	}})
+	tabel := &cetakmodel.Tabel{Kolom: []string{"No", "Nama Obat", "Dosis", "Frekuensi", "Cara Pemberian", "Pemberian Terakhir", "Tindak Lanjut", "Perubahan Aturan Pakai"}}
+	for i, o := range r.Obat {
+		tabel.Isi = append(tabel.Isi, []string{fmt.Sprint(i + 1), o.NamaObat, f(o.DosisObat), f(o.Frekuensi), f(o.CaraPemberian),
+			f(o.WaktuPemberianTerakhir), f(o.TindakLanjut), f(o.PerubahanAturanPakai)})
+	}
+	dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: "Daftar Obat", Tabel: tabel})
+	dok.TandaTangan = []cetakmodel.TandaTangan{{Peran: "Petugas", Nama: r.NmPetugas, Kode: r.Nip}}
+	if k := r.Konfirmasi; k != nil {
+		dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: "Konfirmasi Farmasi", Baris: []cetakmodel.Baris{
+			{Label: "Diterima Farmasi", Nilai: f(k.DiterimaFarmasi)}, {Label: "Dikonfirmasi Apoteker", Nilai: f(k.DikonfirmasiApoteker)},
+			{Label: "Diserahkan ke Pasien", Nilai: f(k.DiserahkanPasien)},
+		}})
+		dok.TandaTangan = append(dok.TandaTangan, cetakmodel.TandaTangan{Peran: "Apoteker", Nama: k.NmPetugas, Kode: k.Nip})
+	}
+	return dok, nil
 }
 
 func (a *Action) List(f repo.Filter, page, limit int) ([]model.Rekonsiliasi, int64, error) {
