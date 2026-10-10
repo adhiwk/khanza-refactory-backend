@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/goravel/framework/contracts/http"
+	"github.com/goravel/framework/facades"
 
 	"goravel/app/modules/rbac"
 	"goravel/app/support"
@@ -100,4 +101,19 @@ func (c *BaseController) IsSuperAdmin(ctx http.Context) bool {
 func (c *BaseController) UserID(ctx http.Context) uint {
 	uid, _ := rbac.UserID(ctx)
 	return uid
+}
+
+// KodePegawai pegawai.nik akun login (users.kd_pegawai); kosong bila belum dihubungkan.
+func (c *BaseController) KodePegawai(ctx http.Context) string {
+	uid, ok := rbac.UserID(ctx)
+	if !ok {
+		return ""
+	}
+	var list []struct {
+		Kd string `gorm:"column:kd"`
+	}
+	if err := facades.Orm().Query().Raw("select ifnull(kd_pegawai,'') as kd from users where id=?", uid).Scan(&list); err != nil || len(list) == 0 {
+		return ""
+	}
+	return list[0].Kd
 }

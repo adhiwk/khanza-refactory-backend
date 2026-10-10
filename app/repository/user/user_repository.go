@@ -2,11 +2,13 @@ package user
 
 import (
 	usermodel "goravel/app/models/user"
+	"goravel/app/support"
 
 	"github.com/goravel/framework/facades"
 )
 
 type Repository interface {
+	PegawaiExists(nik string) (bool, error)
 	FindByID(id uint) (*usermodel.User, error)
 	FindByEmail(email string) (*usermodel.User, error)
 	GetAll() ([]usermodel.User, error)
@@ -67,6 +69,11 @@ func (r *repository) Create(user *usermodel.User) error {
 
 func (r *repository) Update(user *usermodel.User) error {
 	return facades.Orm().Query().Save(user)
+}
+
+// PegawaiExists cek pegawai.nik di database Khanza.
+func (r *repository) PegawaiExists(nik string) (bool, error) {
+	return support.DB().Table("pegawai").Where("nik = ?", nik).Exists()
 }
 
 func (r *repository) Delete(id uint) error {

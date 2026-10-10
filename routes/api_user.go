@@ -15,4 +15,5 @@ func registerUserRoutes(router route.Router) {
 	router.Middleware(rbac.RequirePermission("users.view")).Get("/users/{id}", c.Show)
 	router.Middleware(rbac.RequirePermission("users.update")).Put("/users/{id}", c.Update)
 	router.Middleware(rbac.RequirePermission("users.delete")).Delete("/users/{id}", c.Destroy)
+	router.Middleware(rbac.RequirePermission("users.update")).Put("/users/{id}/pegawai", c.SetPegawai)
 }

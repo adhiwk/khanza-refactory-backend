@@ -1,0 +1,111 @@
+package rekammedis
+
+import "time"
+
+// PenilaianBayiBaruLahir tabel `penilaian_bayi_baru_lahir` (penilaian bayi baru lahir, RMPenilaianBayiBaruLahir).
+type PenilaianBayiBaruLahir struct {
+	NoRawat                              string     `gorm:"column:no_rawat;primaryKey;autoIncrement:false" json:"no_rawat"`
+	Tanggal                              *time.Time `gorm:"column:tanggal" json:"tanggal"`
+	KdDokter                             string     `gorm:"column:kd_dokter" json:"kd_dokter"`
+	NoRkmMedisIbu                        *string    `gorm:"column:no_rkm_medis_ibu" json:"no_rkm_medis_ibu"`
+	PenyakitDideritaIbu                  *string    `gorm:"column:penyakit_diderita_ibu" json:"penyakit_diderita_ibu"`
+	KeteranganPenyakitDideritaIbu        *string    `gorm:"column:keterangan_penyakit_diderita_ibu" json:"keterangan_penyakit_diderita_ibu"`
+	ObatDikonsumsiSelamaKehamilan        *string    `gorm:"column:obat_dikonsumsi_selama_kehamilan" json:"obat_dikonsumsi_selama_kehamilan"`
+	PerawatanAntenatal                   *string    `gorm:"column:perawatan_antenatal" json:"perawatan_antenatal"`
+	KeteranganPerawatanAntenatal         *string    `gorm:"column:keterangan_perawatan_antenatal" json:"keterangan_perawatan_antenatal"`
+	TerdaftarEkohort                     *string    `gorm:"column:terdaftar_ekohort" json:"terdaftar_ekohort"`
+	KeteranganTerdaftarEkohort           *string    `gorm:"column:keterangan_terdaftar_ekohort" json:"keterangan_terdaftar_ekohort"`
+	PenyulitKehamilan                    *string    `gorm:"column:penyulit_kehamilan" json:"penyulit_kehamilan"`
+	KeteranganPenyulitKehamilan          *string    `gorm:"column:keterangan_penyulit_kehamilan" json:"keterangan_penyulit_kehamilan"`
+	Alergi                               *string    `gorm:"column:alergi" json:"alergi"`
+	KeteranganLainnyaRiwayatMaternal     *string    `gorm:"column:keterangan_lainnya_riwayat_maternal" json:"keterangan_lainnya_riwayat_maternal"`
+	UmurKehamilan                        *string    `gorm:"column:umur_kehamilan" json:"umur_kehamilan"`
+	Kehamilan                            *string    `gorm:"column:kehamilan" json:"kehamilan"`
+	KeteranganKehamilan                  *string    `gorm:"column:keterangan_kehamilan" json:"keterangan_kehamilan"`
+	UrutanKehamilan                      *string    `gorm:"column:urutan_kehamilan" json:"urutan_kehamilan"`
+	JamKetubanPecah                      *string    `gorm:"column:jam_ketuban_pecah" json:"jam_ketuban_pecah"`
+	MenitKetubanPecah                    *string    `gorm:"column:menit_ketuban_pecah" json:"menit_ketuban_pecah"`
+	JumlahAirKetuban                     *string    `gorm:"column:jumlah_air_ketuban" json:"jumlah_air_ketuban"`
+	WarnaAirKetuban                      *string    `gorm:"column:warna_air_ketuban" json:"warna_air_ketuban"`
+	BauAirKetuban                        *string    `gorm:"column:bau_air_ketuban" json:"bau_air_ketuban"`
+	LetakBayi                            *string    `gorm:"column:letak_bayi" json:"letak_bayi"`
+	MacamPersalinan                      *string    `gorm:"column:macam_persalinan" json:"macam_persalinan"`
+	KeteranganMacamPersalinan            *string    `gorm:"column:keterangan_macam_persalinan" json:"keterangan_macam_persalinan"`
+	IndikasiPersalinanOperatif           *string    `gorm:"column:indikasi_persalinan_operatif" json:"indikasi_persalinan_operatif"`
+	KeteranganIndikasiPersalinanOperatif *string    `gorm:"column:keterangan_indikasi_persalinan_operatif" json:"keterangan_indikasi_persalinan_operatif"`
+	LamaGawatJanin                       *string    `gorm:"column:lama_gawat_janin" json:"lama_gawat_janin"`
+	ObatSelamaPersalinan                 *string    `gorm:"column:obat_selama_persalinan" json:"obat_selama_persalinan"`
+	BeratPlacenta                        *string    `gorm:"column:berat_placenta" json:"berat_placenta"`
+	KelainanPlacenta                     *string    `gorm:"column:kelainan_placenta" json:"kelainan_placenta"`
+	KeteranganLainnyaRiwayatPersalinan   *string    `gorm:"column:keterangan_lainnya_riwayat_persalinan" json:"keterangan_lainnya_riwayat_persalinan"`
+	F1                                   string     `gorm:"column:f1" json:"f1"`
+	U1                                   string     `gorm:"column:u1" json:"u1"`
+	T1                                   string     `gorm:"column:t1" json:"t1"`
+	R1                                   string     `gorm:"column:r1" json:"r1"`
+	W1                                   string     `gorm:"column:w1" json:"w1"`
+	N1                                   string     `gorm:"column:n1" json:"n1"`
+	F5                                   string     `gorm:"column:f5" json:"f5"`
+	U5                                   string     `gorm:"column:u5" json:"u5"`
+	T5                                   string     `gorm:"column:t5" json:"t5"`
+	R5                                   string     `gorm:"column:r5" json:"r5"`
+	W5                                   string     `gorm:"column:w5" json:"w5"`
+	N5                                   string     `gorm:"column:n5" json:"n5"`
+	F10                                  string     `gorm:"column:f10" json:"f10"`
+	U10                                  string     `gorm:"column:u10" json:"u10"`
+	T10                                  string     `gorm:"column:t10" json:"t10"`
+	R10                                  string     `gorm:"column:r10" json:"r10"`
+	W10                                  string     `gorm:"column:w10" json:"w10"`
+	N10                                  string     `gorm:"column:n10" json:"n10"`
+	Bblahir                              *string    `gorm:"column:bblahir" json:"bblahir"`
+	PanjangBadan                         *string    `gorm:"column:panjang_badan" json:"panjang_badan"`
+	LingkarKepala                        *string    `gorm:"column:lingkar_kepala" json:"lingkar_kepala"`
+	LingkarDada                          *string    `gorm:"column:lingkar_dada" json:"lingkar_dada"`
+	ResusitasiSaatLahir                  *string    `gorm:"column:resusitasi_saat_lahir" json:"resusitasi_saat_lahir"`
+	KeteranganResusitasiSaatLahir        *string    `gorm:"column:keterangan_resusitasi_saat_lahir" json:"keterangan_resusitasi_saat_lahir"`
+	ObatDiberikanSaatLahir               *string    `gorm:"column:obat_diberikan_saat_lahir" json:"obat_diberikan_saat_lahir"`
+	KeteranganLainnyaKeadaanBayi         *string    `gorm:"column:keterangan_lainnya_keadaan_bayi" json:"keterangan_lainnya_keadaan_bayi"`
+	KondisiUmum                          *string    `gorm:"column:kondisi_umum" json:"kondisi_umum"`
+	KeteranganKondisiUmum                *string    `gorm:"column:keterangan_kondisi_umum" json:"keterangan_kondisi_umum"`
+	Kulit                                *string    `gorm:"column:kulit" json:"kulit"`
+	KeteranganKulit                      *string    `gorm:"column:keterangan_kulit" json:"keterangan_kulit"`
+	Kepala                               *string    `gorm:"column:kepala" json:"kepala"`
+	KeteranganKepala                     *string    `gorm:"column:keterangan_kepala" json:"keterangan_kepala"`
+	Leher                                *string    `gorm:"column:leher" json:"leher"`
+	KeteranganLeher                      *string    `gorm:"column:keterangan_leher" json:"keterangan_leher"`
+	Mata                                 *string    `gorm:"column:mata" json:"mata"`
+	KeteranganMata                       *string    `gorm:"column:keterangan_mata" json:"keterangan_mata"`
+	Hidung                               *string    `gorm:"column:hidung" json:"hidung"`
+	KeteranganHidung                     *string    `gorm:"column:keterangan_hidung" json:"keterangan_hidung"`
+	Telinga                              *string    `gorm:"column:telinga" json:"telinga"`
+	KeteranganTelinga                    *string    `gorm:"column:keterangan_telinga" json:"keterangan_telinga"`
+	Dada                                 *string    `gorm:"column:dada" json:"dada"`
+	KeteranganDada                       *string    `gorm:"column:keterangan_dada" json:"keterangan_dada"`
+	Paru                                 *string    `gorm:"column:paru" json:"paru"`
+	KeteranganParu                       *string    `gorm:"column:keterangan_paru" json:"keterangan_paru"`
+	Jantung                              *string    `gorm:"column:jantung" json:"jantung"`
+	KeteranganJantung                    *string    `gorm:"column:keterangan_jantung" json:"keterangan_jantung"`
+	Perut                                *string    `gorm:"column:perut" json:"perut"`
+	KeteranganPerut                      *string    `gorm:"column:keterangan_perut" json:"keterangan_perut"`
+	TaliPusat                            *string    `gorm:"column:tali_pusat" json:"tali_pusat"`
+	KeteranganTaliPusat                  *string    `gorm:"column:keterangan_tali_pusat" json:"keterangan_tali_pusat"`
+	AlatKelamin                          *string    `gorm:"column:alat_kelamin" json:"alat_kelamin"`
+	KeteranganAlatKelamin                *string    `gorm:"column:keterangan_alat_kelamin" json:"keterangan_alat_kelamin"`
+	RuasTulangBelakang                   *string    `gorm:"column:ruas_tulang_belakang" json:"ruas_tulang_belakang"`
+	KeteranganRuasTulangBelakang         *string    `gorm:"column:keterangan_ruas_tulang_belakang" json:"keterangan_ruas_tulang_belakang"`
+	Extrimitas                           *string    `gorm:"column:extrimitas" json:"extrimitas"`
+	KeteranganExtrimitas                 *string    `gorm:"column:keterangan_extrimitas" json:"keterangan_extrimitas"`
+	Anus                                 *string    `gorm:"column:anus" json:"anus"`
+	KeteranganAnus                       *string    `gorm:"column:keterangan_anus" json:"keterangan_anus"`
+	Refleks                              *string    `gorm:"column:refleks" json:"refleks"`
+	KeteranganRefleks                    *string    `gorm:"column:keterangan_refleks" json:"keterangan_refleks"`
+	DenyutFemoral                        *string    `gorm:"column:denyut_femoral" json:"denyut_femoral"`
+	KeteranganDenyutFemoral              *string    `gorm:"column:keterangan_denyut_femoral" json:"keterangan_denyut_femoral"`
+	PemeriksaanFisikLainnya              *string    `gorm:"column:pemeriksaan_fisik_lainnya" json:"pemeriksaan_fisik_lainnya"`
+	PemeriksaanPenunjang                 *string    `gorm:"column:pemeriksaan_penunjang" json:"pemeriksaan_penunjang"`
+	Diagnosa                             *string    `gorm:"column:diagnosa" json:"diagnosa"`
+	Tatalaksana                          *string    `gorm:"column:tatalaksana" json:"tatalaksana"`
+}
+
+func (PenilaianBayiBaruLahir) TableName() string {
+	return "penilaian_bayi_baru_lahir"
+}

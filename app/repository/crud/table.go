@@ -3,6 +3,7 @@
 package crud
 
 import (
+	"fmt"
 	"strings"
 
 	contractsorm "github.com/goravel/framework/contracts/database/orm"
@@ -158,4 +159,22 @@ func WhereLike(q contractsorm.Query, search string, columns ...string) contracts
 // ExistsIn true bila value ada pada table.column (cek referensi master lain).
 func ExistsIn(q contractsorm.Query, table, column string, value any) (bool, error) {
 	return q.Table(table).Where(column+" = ?", value).Exists()
+}
+
+// NextCode nomor berikutnya berformat prefix + angka berlebar width (mis. "R0001", "RO202610100001"),
+// dihitung dari nomor terbesar berprefix sama dan dikunci for update; panggil di dalam transaksi.
+func NextCode(tx contractsorm.Query, table, column, prefix string, width int) (string, error) {
+	var list []struct {
+		Max int `gorm:"column:max"`
+	}
+	err := tx.Raw("select ifnull(max(convert(substring("+column+",?),unsigned)),0) as max from "+table+
+		" where "+column+" like ? and length("+column+")=? for update", len(prefix)+1, prefix+"%", len(prefix)+width).Scan(&list)
+	if err != nil {
+		return "", err
+	}
+	max := 0
+	if len(list) > 0 {
+		max = list[0].Max
+	}
+	return fmt.Sprintf("%s%0*d", prefix, width, max+1), nil
 }

@@ -1,0 +1,112 @@
+package rekammedis
+
+import "time"
+
+// PenilaianMcu tabel `penilaian_mcu` (MCU, RMMCU).
+type PenilaianMcu struct {
+	NoRawat                     string     `gorm:"column:no_rawat;primaryKey;autoIncrement:false" json:"no_rawat"`
+	Tanggal                     *time.Time `gorm:"column:tanggal" json:"tanggal"`
+	KdDokter                    string     `gorm:"column:kd_dokter" json:"kd_dokter"`
+	Informasi                   string     `gorm:"column:informasi" json:"informasi"`
+	Rps                         string     `gorm:"column:rps" json:"rps"`
+	Rpk                         string     `gorm:"column:rpk" json:"rpk"`
+	Rpd                         string     `gorm:"column:rpd" json:"rpd"`
+	Alergi                      string     `gorm:"column:alergi" json:"alergi"`
+	Keadaan                     string     `gorm:"column:keadaan" json:"keadaan"`
+	Kesadaran                   string     `gorm:"column:kesadaran" json:"kesadaran"`
+	Td                          string     `gorm:"column:td" json:"td"`
+	Nadi                        string     `gorm:"column:nadi" json:"nadi"`
+	Rr                          string     `gorm:"column:rr" json:"rr"`
+	Tb                          string     `gorm:"column:tb" json:"tb"`
+	Bb                          string     `gorm:"column:bb" json:"bb"`
+	Suhu                        string     `gorm:"column:suhu" json:"suhu"`
+	Bmi                         string     `gorm:"column:bmi" json:"bmi"`
+	KasifikasiBmi               string     `gorm:"column:kasifikasi_bmi" json:"kasifikasi_bmi"`
+	LingkarPinggang             string     `gorm:"column:lingkar_pinggang" json:"lingkar_pinggang"`
+	RisikoLingkarPinggang       string     `gorm:"column:risiko_lingkar_pinggang" json:"risiko_lingkar_pinggang"`
+	Submandibula                string     `gorm:"column:submandibula" json:"submandibula"`
+	Axilla                      string     `gorm:"column:axilla" json:"axilla"`
+	Supraklavikula              string     `gorm:"column:supraklavikula" json:"supraklavikula"`
+	Leher                       string     `gorm:"column:leher" json:"leher"`
+	Inguinal                    string     `gorm:"column:inguinal" json:"inguinal"`
+	Oedema                      string     `gorm:"column:oedema" json:"oedema"`
+	SinusFrontalis              string     `gorm:"column:sinus_frontalis" json:"sinus_frontalis"`
+	SinusMaxilaris              string     `gorm:"column:sinus_maxilaris" json:"sinus_maxilaris"`
+	Rambut                      string     `gorm:"column:rambut" json:"rambut"`
+	Palpebra                    string     `gorm:"column:palpebra" json:"palpebra"`
+	Sklera                      string     `gorm:"column:sklera" json:"sklera"`
+	Cornea                      string     `gorm:"column:cornea" json:"cornea"`
+	ButaWarna                   string     `gorm:"column:buta_warna" json:"buta_warna"`
+	Konjungtiva                 string     `gorm:"column:konjungtiva" json:"konjungtiva"`
+	Lensa                       string     `gorm:"column:lensa" json:"lensa"`
+	Pupil                       string     `gorm:"column:pupil" json:"pupil"`
+	MenggunakanKacamata         string     `gorm:"column:menggunakan_kacamata" json:"menggunakan_kacamata"`
+	Visus                       string     `gorm:"column:visus" json:"visus"`
+	LuasLapangPandang           string     `gorm:"column:luas_lapang_pandang" json:"luas_lapang_pandang"`
+	KeteranganLuasLapangPandang string     `gorm:"column:keterangan_luas_lapang_pandang" json:"keterangan_luas_lapang_pandang"`
+	LubangTelinga               string     `gorm:"column:lubang_telinga" json:"lubang_telinga"`
+	DaunTelinga                 string     `gorm:"column:daun_telinga" json:"daun_telinga"`
+	SelaputPendengaran          string     `gorm:"column:selaput_pendengaran" json:"selaput_pendengaran"`
+	ProcMastoideus              string     `gorm:"column:proc_mastoideus" json:"proc_mastoideus"`
+	SeptumNasi                  string     `gorm:"column:septum_nasi" json:"septum_nasi"`
+	LubangHidung                string     `gorm:"column:lubang_hidung" json:"lubang_hidung"`
+	Sinus                       string     `gorm:"column:sinus" json:"sinus"`
+	Bibir                       string     `gorm:"column:bibir" json:"bibir"`
+	Gusi                        string     `gorm:"column:gusi" json:"gusi"`
+	Gigi                        string     `gorm:"column:gigi" json:"gigi"`
+	Caries                      string     `gorm:"column:caries" json:"caries"`
+	Lidah                       string     `gorm:"column:lidah" json:"lidah"`
+	Faring                      string     `gorm:"column:faring" json:"faring"`
+	Tonsil                      string     `gorm:"column:tonsil" json:"tonsil"`
+	KelenjarLimfe               string     `gorm:"column:kelenjar_limfe" json:"kelenjar_limfe"`
+	KelenjarGondok              string     `gorm:"column:kelenjar_gondok" json:"kelenjar_gondok"`
+	GerakanDada                 string     `gorm:"column:gerakan_dada" json:"gerakan_dada"`
+	VocalFemitus                string     `gorm:"column:vocal_femitus" json:"vocal_femitus"`
+	PerkusiDada                 string     `gorm:"column:perkusi_dada" json:"perkusi_dada"`
+	BunyiNapas                  string     `gorm:"column:bunyi_napas" json:"bunyi_napas"`
+	BunyiTambahan               string     `gorm:"column:bunyi_tambahan" json:"bunyi_tambahan"`
+	IctusCordis                 string     `gorm:"column:ictus_cordis" json:"ictus_cordis"`
+	BunyiJantung                string     `gorm:"column:bunyi_jantung" json:"bunyi_jantung"`
+	Batas                       string     `gorm:"column:batas" json:"batas"`
+	Mamae                       string     `gorm:"column:mamae" json:"mamae"`
+	KeteranganMamae             string     `gorm:"column:keterangan_mamae" json:"keterangan_mamae"`
+	Inspeksi                    string     `gorm:"column:inspeksi" json:"inspeksi"`
+	Palpasi                     string     `gorm:"column:palpasi" json:"palpasi"`
+	Hepar                       string     `gorm:"column:hepar" json:"hepar"`
+	PerkusiAbdomen              string     `gorm:"column:perkusi_abdomen" json:"perkusi_abdomen"`
+	Auskultasi                  string     `gorm:"column:auskultasi" json:"auskultasi"`
+	Limpa                       string     `gorm:"column:limpa" json:"limpa"`
+	Costovertebral              string     `gorm:"column:costovertebral" json:"costovertebral"`
+	Scoliosis                   string     `gorm:"column:scoliosis" json:"scoliosis"`
+	KondisiKulit                string     `gorm:"column:kondisi_kulit" json:"kondisi_kulit"`
+	PenyakitKulit               string     `gorm:"column:penyakit_kulit" json:"penyakit_kulit"`
+	EkstrimitasAtas             string     `gorm:"column:ekstrimitas_atas" json:"ekstrimitas_atas"`
+	EkstrimitasAtasKet          string     `gorm:"column:ekstrimitas_atas_ket" json:"ekstrimitas_atas_ket"`
+	EkstrimitasBawah            string     `gorm:"column:ekstrimitas_bawah" json:"ekstrimitas_bawah"`
+	EkstrimitasBawahKet         string     `gorm:"column:ekstrimitas_bawah_ket" json:"ekstrimitas_bawah_ket"`
+	AreaGenitalia               string     `gorm:"column:area_genitalia" json:"area_genitalia"`
+	KeteranganAreaGenitalia     string     `gorm:"column:keterangan_area_genitalia" json:"keterangan_area_genitalia"`
+	AnusPerianal                string     `gorm:"column:anus_perianal" json:"anus_perianal"`
+	KeteranganAnusPerianal      string     `gorm:"column:keterangan_anus_perianal" json:"keterangan_anus_perianal"`
+	Laborat                     string     `gorm:"column:laborat" json:"laborat"`
+	Radiologi                   string     `gorm:"column:radiologi" json:"radiologi"`
+	Ekg                         string     `gorm:"column:ekg" json:"ekg"`
+	Spirometri                  string     `gorm:"column:spirometri" json:"spirometri"`
+	Audiometri                  string     `gorm:"column:audiometri" json:"audiometri"`
+	Treadmill                   string     `gorm:"column:treadmill" json:"treadmill"`
+	RombergTest                 string     `gorm:"column:romberg_test" json:"romberg_test"`
+	BackStrength                string     `gorm:"column:back_strength" json:"back_strength"`
+	AbiTanganKanan              string     `gorm:"column:abi_tangan_kanan" json:"abi_tangan_kanan"`
+	AbiTanganKiri               string     `gorm:"column:abi_tangan_kiri" json:"abi_tangan_kiri"`
+	AbiKakiKanan                string     `gorm:"column:abi_kaki_kanan" json:"abi_kaki_kanan"`
+	AbiKakiKiri                 string     `gorm:"column:abi_kaki_kiri" json:"abi_kaki_kiri"`
+	Lainlain                    string     `gorm:"column:lainlain" json:"lainlain"`
+	Merokok                     string     `gorm:"column:merokok" json:"merokok"`
+	Alkohol                     string     `gorm:"column:alkohol" json:"alkohol"`
+	Kesimpulan                  string     `gorm:"column:kesimpulan" json:"kesimpulan"`
+	Anjuran                     string     `gorm:"column:anjuran" json:"anjuran"`
+}
+
+func (PenilaianMcu) TableName() string {
+	return "penilaian_mcu"
+}

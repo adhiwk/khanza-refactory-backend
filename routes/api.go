@@ -24,5 +24,6 @@ func Api() {
 		registerPelayananRoutes(router)
 		registerFarmasiMasterRoutes(router)
 		registerBillingRoutes(router)
+		registerRekamMedisRoutes(router)
 	})
 }
