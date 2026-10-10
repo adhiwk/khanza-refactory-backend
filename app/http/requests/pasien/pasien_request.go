@@ -4,9 +4,9 @@ import (
 	"github.com/goravel/framework/contracts/http"
 )
 
-// PasienData field yang dipakai bersama oleh store & update.
+// Data field pasien yang dipakai bersama oleh store & update.
 // Tanggal dikirim sebagai string "YYYY-MM-DD"; string kosong pada kolom nullable disimpan sebagai NULL.
-type PasienData struct {
+type Data struct {
 	NmPasien         string `form:"nm_pasien" json:"nm_pasien"`
 	NoKtp            string `form:"no_ktp" json:"no_ktp"`
 	Jk               string `form:"jk" json:"jk"`
@@ -84,38 +84,30 @@ func baseRules() map[string]any {
 	}
 }
 
-type StorePasienRequest struct {
+type StoreRequest struct {
 	NoRkmMedis string `form:"no_rkm_medis" json:"no_rkm_medis"`
-	PasienData
+	Data
 }
 
-func (r *StorePasienRequest) Authorize(ctx http.Context) error {
+func (r *StoreRequest) Authorize(ctx http.Context) error {
 	return nil
 }
 
-func (r *StorePasienRequest) Rules(ctx http.Context) map[string]any {
+func (r *StoreRequest) Rules(ctx http.Context) map[string]any {
 	rules := baseRules()
 	rules["no_rkm_medis"] = "required|string|max_len:15"
 	return rules
 }
 
-func (r *StorePasienRequest) Filters(ctx http.Context) map[string]string {
-	return map[string]string{}
+// UpdateRequest mengganti seluruh data pasien (PUT); no_rkm_medis diambil dari route.
+type UpdateRequest struct {
+	Data
 }
 
-// UpdatePasienRequest mengganti seluruh data pasien (PUT); no_rkm_medis diambil dari route.
-type UpdatePasienRequest struct {
-	PasienData
-}
-
-func (r *UpdatePasienRequest) Authorize(ctx http.Context) error {
+func (r *UpdateRequest) Authorize(ctx http.Context) error {
 	return nil
 }
 
-func (r *UpdatePasienRequest) Rules(ctx http.Context) map[string]any {
+func (r *UpdateRequest) Rules(ctx http.Context) map[string]any {
 	return baseRules()
-}
-
-func (r *UpdatePasienRequest) Filters(ctx http.Context) map[string]string {
-	return map[string]string{}
 }

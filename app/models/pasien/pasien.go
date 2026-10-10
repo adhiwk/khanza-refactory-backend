@@ -46,7 +46,3 @@ type Pasien struct {
 func (Pasien) TableName() string {
 	return "pasien"
 }
-
-func (Pasien) Connection() string {
-	return "mysql_kedua"
-}

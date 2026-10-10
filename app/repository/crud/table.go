@@ -42,7 +42,21 @@ func (t Table[T, K]) active(q contractsorm.Query) contractsorm.Query {
 
 // Paginate list data aktif dengan pencarian LIKE pada kolom Search.
 func (t Table[T, K]) Paginate(search string, page, limit int) ([]T, int64, error) {
-	q := t.active(t.Query().Model(new(T)))
+	return t.PaginateWhere(search, nil, page, limit)
+}
+
+// PaginateWhere seperti Paginate ditambah filter kesamaan kolom (nilai kosong diabaikan).
+// Filter eksplisit pada kolom Active menggantikan filter default "aktif saja".
+func (t Table[T, K]) PaginateWhere(search string, eq map[string]string, page, limit int) ([]T, int64, error) {
+	q := t.Query().Model(new(T))
+	if _, ok := eq[t.Active]; !ok || eq[t.Active] == "" {
+		q = t.active(q)
+	}
+	for col, v := range eq {
+		if v != "" {
+			q = q.Where(col+" = ?", v)
+		}
+	}
 	q = WhereLike(q, search, t.Search...)
 	if t.Order != "" {
 		q = q.Order(t.Order)
@@ -76,6 +90,24 @@ func (t Table[T, K]) Find(key K) (*T, error) {
 		return nil, nil
 	}
 	return &list[0], nil
+}
+
+// FindAny seperti Find tanpa memperhatikan status aktif; (nil, nil) bila tidak ada.
+func (t Table[T, K]) FindAny(key K) (*T, error) {
+	list := []T{}
+	if err := t.Query().Where(t.Key+" = ?", key).Limit(1).Find(&list); err != nil {
+		return nil, err
+	}
+	if len(list) == 0 {
+		return nil, nil
+	}
+	return &list[0], nil
+}
+
+// SetActive mengubah kolom Active menjadi status ('1' aktif / '0' nonaktif).
+func (t Table[T, K]) SetActive(key K, status string) error {
+	_, err := t.Query().Model(new(T)).Where(t.Key+" = ?", key).Update(t.Active, status)
+	return err
 }
 
 // Exists true bila primary key sudah dipakai, termasuk data yang dinonaktifkan.

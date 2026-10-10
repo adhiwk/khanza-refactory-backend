@@ -1,143 +1,87 @@
 package obat
 
 import (
-	"errors"
-
 	"github.com/goravel/framework/contracts/http"
 
-	obatAction "goravel/app/actions/obat"
-	"goravel/app/facades"
+	action "goravel/app/actions/obat"
 	"goravel/app/http/controllers"
-	obatRequest "goravel/app/http/requests/obat"
-	obatRepo "goravel/app/repository/obat"
+	request "goravel/app/http/requests/obat"
+	repo "goravel/app/repository/obat"
 	"goravel/app/support"
 )
 
-type ObatController struct {
+type Controller struct {
 	controllers.BaseController
-	action *obatAction.Action
+	action *action.Action
 }
 
-func NewObatController() *ObatController {
-	return &ObatController{
-		action: obatAction.NewAction(obatRepo.NewRepository()),
-	}
+func NewController() *Controller {
+	return &Controller{action: action.NewAction(repo.NewRepository())}
 }
 
-// GET /obat?search=&status=&kdjns=&kode_kategori=&kode_golongan=&page=1&limit=10
-func (c *ObatController) Index(ctx http.Context) http.Response {
-	req := obatAction.ListRequest{
-		Search:       ctx.Request().Query("search"),
-		Status:       ctx.Request().Query("status"),
-		Kdjns:        ctx.Request().Query("kdjns"),
-		KodeKategori: ctx.Request().Query("kode_kategori"),
-		KodeGolongan: ctx.Request().Query("kode_golongan"),
-		Page:         ctx.Request().QueryInt("page", 1),
-		Limit:        ctx.Request().QueryInt("limit", 10),
-	}
-
-	res, err := c.action.List(req)
+// Index ?search=&status=&kdjns=&kode_kategori=&kode_golongan=&page=&limit= (tanpa status = hanya aktif)
+func (c *Controller) Index(ctx http.Context) http.Response {
+	page, limit := support.PageParams(ctx)
+	q := ctx.Request()
+	data, total, err := c.action.List(q.Input("search"), action.Filter{
+		Status:       q.Input("status"),
+		Kdjns:        q.Input("kdjns"),
+		KodeKategori: q.Input("kode_kategori"),
+		KodeGolongan: q.Input("kode_golongan"),
+	}, page, limit)
 	if err != nil {
-		return c.handleError(ctx, err)
+		return c.ResponseActionError(ctx, "Gagal mengambil data obat", err)
 	}
-
-	paginated := support.FormatLaravelPagination(ctx, res.Data, res.Meta.Page, res.Meta.Limit, res.Meta.Total)
-
-	return c.ResponseSuccess(ctx, "Data obat berhasil diambil", paginated)
+	return c.ResponsePaginated(ctx, "Data obat berhasil diambil", data, page, limit, total)
 }
 
-// GET /obat/{kode}
-func (c *ObatController) Show(ctx http.Context) http.Response {
-	data, err := c.action.Detail(ctx.Request().Route("kode"))
+func (c *Controller) Show(ctx http.Context) http.Response {
+	data, err := c.action.Detail(ctx.Request().Route("kode_brng"))
 	if err != nil {
-		return c.handleError(ctx, err)
+		return c.ResponseActionError(ctx, "Gagal mengambil obat", err)
 	}
-
 	return c.ResponseSuccess(ctx, "Detail obat berhasil diambil", data)
 }
 
-// POST /obat
-func (c *ObatController) Store(ctx http.Context) http.Response {
-	var req obatRequest.StoreObatRequest
-	if resp := c.validateRequest(ctx, &req); resp != nil {
+func (c *Controller) Store(ctx http.Context) http.Response {
+	var req request.StoreRequest
+	if resp := c.Validate(ctx, &req); resp != nil {
 		return resp
 	}
-
-	data, err := c.action.Create(req.ObatRequest)
+	data, err := c.action.Create(req)
 	if err != nil {
-		return c.handleError(ctx, err)
+		return c.ResponseActionError(ctx, "Gagal menyimpan obat", err)
 	}
-
-	return c.ResponseCreated(ctx, "Obat berhasil ditambahkan", data)
+	return c.ResponseCreated(ctx, "Obat berhasil disimpan", data)
 }
 
-// PUT /obat/{kode}
-func (c *ObatController) Update(ctx http.Context) http.Response {
-	var req obatRequest.UpdateObatRequest
-	if resp := c.validateRequest(ctx, &req); resp != nil {
+func (c *Controller) Update(ctx http.Context) http.Response {
+	var req request.UpdateRequest
+	if resp := c.Validate(ctx, &req); resp != nil {
 		return resp
 	}
-
-	data, err := c.action.Update(ctx.Request().Route("kode"), req.ObatRequest)
+	data, err := c.action.Update(ctx.Request().Route("kode_brng"), req.Data)
 	if err != nil {
-		return c.handleError(ctx, err)
+		return c.ResponseActionError(ctx, "Gagal memperbarui obat", err)
 	}
-
 	return c.ResponseSuccess(ctx, "Obat berhasil diperbarui", data)
 }
 
-// PATCH /obat/{kode}/status   body: {"status": "0" | "1"}
-func (c *ObatController) UpdateStatus(ctx http.Context) http.Response {
-	var req obatRequest.UpdateStatusRequest
-	if resp := c.validateRequest(ctx, &req); resp != nil {
+func (c *Controller) UpdateStatus(ctx http.Context) http.Response {
+	var req request.StatusRequest
+	if resp := c.Validate(ctx, &req); resp != nil {
 		return resp
 	}
-
-	data, err := c.action.UpdateStatus(ctx.Request().Route("kode"), req.Status)
+	data, err := c.action.UpdateStatus(ctx.Request().Route("kode_brng"), req.Status)
 	if err != nil {
-		return c.handleError(ctx, err)
+		return c.ResponseActionError(ctx, "Gagal memperbarui status obat", err)
 	}
-
 	return c.ResponseSuccess(ctx, "Status obat berhasil diperbarui", data)
 }
 
-// DELETE /obat/{kode}
-func (c *ObatController) Destroy(ctx http.Context) http.Response {
-	if err := c.action.Delete(ctx.Request().Route("kode")); err != nil {
-		return c.handleError(ctx, err)
+func (c *Controller) Destroy(ctx http.Context) http.Response {
+	if err := c.action.Delete(ctx.Request().Route("kode_brng")); err != nil {
+		return c.ResponseActionError(ctx, "Gagal menghapus obat", err)
 	}
-
 	return c.ResponseSuccess(ctx, "Obat berhasil dihapus", nil)
-}
-
-// ===== helper =====
-
-// validateRequest menjalankan FormRequest (authorize + rules + bind).
-// Mengembalikan response error bila gagal, atau nil bila valid.
-func (c *ObatController) validateRequest(ctx http.Context, req http.FormRequest) http.Response {
-	validationErrors, err := ctx.Request().ValidateRequest(req)
-	if err != nil {
-		return c.ResponseError(ctx, http.StatusBadRequest, "Format request tidak valid", err.Error())
-	}
-	if validationErrors != nil {
-		return c.ResponseError(ctx, http.StatusUnprocessableEntity, "Validasi gagal", validationErrors.All())
-	}
-	return nil
-}
-
-// handleError memetakan error domain ke HTTP status; error tak dikenal
-// dicatat ke log dan tidak dibocorkan ke client.
-func (c *ObatController) handleError(ctx http.Context, err error) http.Response {
-	switch {
-	case errors.Is(err, obatAction.ErrNotFound):
-		return c.ResponseError(ctx, http.StatusNotFound, err.Error(), nil)
-	case errors.Is(err, obatAction.ErrAlreadyExists):
-		return c.ResponseError(ctx, http.StatusConflict, err.Error(), nil)
-	case errors.Is(err, obatAction.ErrInvalidStatus),
-		errors.Is(err, obatAction.ErrInvalidExpire):
-		return c.ResponseError(ctx, http.StatusUnprocessableEntity, err.Error(), nil)
-	default:
-		facades.Log().WithContext(ctx).Errorf("obat: %v", err)
-		return c.ResponseError(ctx, http.StatusInternalServerError, "Terjadi kesalahan pada server", nil)
-	}
 }
