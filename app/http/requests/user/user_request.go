@@ -48,3 +48,16 @@ func (r *UpdateUserRequest) Rules(ctx http.Context) map[string]any {
 func (r *UpdateUserRequest) Filters(ctx http.Context) map[string]string {
 	return map[string]string{}
 }
+
+// PegawaiRequest PUT /users/{id}/pegawai; kd_pegawai kosong melepas hubungan.
+type PegawaiRequest struct {
+	KdPegawai string `form:"kd_pegawai" json:"kd_pegawai"`
+}
+
+func (r *PegawaiRequest) Authorize(ctx http.Context) error {
+	return nil
+}
+
+func (r *PegawaiRequest) Rules(ctx http.Context) map[string]any {
+	return map[string]any{"kd_pegawai": "string|max_len:20"}
+}

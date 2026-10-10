@@ -1,10 +1,18 @@
 package user
 
 import (
+	"strings"
+
 	usermodel "goravel/app/models/user"
 	userrepo "goravel/app/repository/user"
+	"goravel/app/support"
 
 	"github.com/goravel/framework/facades"
+)
+
+var (
+	ErrNotFound        = support.NotFound("data user tidak ditemukan")
+	ErrPegawaiNotFound = support.NotFound("data pegawai tidak ditemukan")
 )
 
 type Action struct {
@@ -62,6 +70,32 @@ func (a *Action) Update(id uint, name, email, plainPassword string) (*usermodel.
 		user.Password = hashedPassword
 	}
 
+	err = a.repo.Update(user)
+	return user, err
+}
+
+// SetPegawai menghubungkan akun ke pegawai Khanza; kd kosong melepas hubungan.
+func (a *Action) SetPegawai(id uint, kd string) (*usermodel.User, error) {
+	user, err := a.repo.FindByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if user == nil || user.ID == 0 {
+		return nil, ErrNotFound
+	}
+	kd = strings.TrimSpace(kd)
+	if kd == "" {
+		user.KdPegawai = nil
+	} else {
+		ok, err := a.repo.PegawaiExists(kd)
+		if err != nil {
+			return nil, err
+		}
+		if !ok {
+			return nil, ErrPegawaiNotFound
+		}
+		user.KdPegawai = &kd
+	}
 	err = a.repo.Update(user)
 	return user, err
 }

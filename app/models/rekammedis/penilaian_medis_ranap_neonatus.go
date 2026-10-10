@@ -1,0 +1,116 @@
+package rekammedis
+
+import "time"
+
+// PenilaianMedisRanapNeonatus tabel `penilaian_medis_ranap_neonatus` (penilaian awal medis ranap neonatus, RMPenilaianAwalMedisRanapNeonatus).
+type PenilaianMedisRanapNeonatus struct {
+	NoRawat                        string     `gorm:"column:no_rawat;primaryKey;autoIncrement:false" json:"no_rawat"`
+	Tanggal                        *time.Time `gorm:"column:tanggal" json:"tanggal"`
+	KdDokter                       string     `gorm:"column:kd_dokter" json:"kd_dokter"`
+	NoRkmMedisIbu                  *string    `gorm:"column:no_rkm_medis_ibu" json:"no_rkm_medis_ibu"`
+	G                              *string    `gorm:"column:g" json:"g"`
+	P                              *string    `gorm:"column:p" json:"p"`
+	A                              *string    `gorm:"column:a" json:"a"`
+	Hidup                          *string    `gorm:"column:hidup" json:"hidup"`
+	Usiahamil                      *string    `gorm:"column:usiahamil" json:"usiahamil"`
+	Hbsag                          *string    `gorm:"column:hbsag" json:"hbsag"`
+	Hiv                            *string    `gorm:"column:hiv" json:"hiv"`
+	Syphilis                       *string    `gorm:"column:syphilis" json:"syphilis"`
+	RiwayatObstetriIbu             *string    `gorm:"column:riwayat_obstetri_ibu" json:"riwayat_obstetri_ibu"`
+	KeteranganRiwayatObstetriIbu   *string    `gorm:"column:keterangan_riwayat_obstetri_ibu" json:"keterangan_riwayat_obstetri_ibu"`
+	FaktorRisikoNeonatal           *string    `gorm:"column:faktor_risiko_neonatal" json:"faktor_risiko_neonatal"`
+	KeteranganFaktorRisikoNeonatal *string    `gorm:"column:keterangan_faktor_risiko_neonatal" json:"keterangan_faktor_risiko_neonatal"`
+	TanggalPersalinan              *time.Time `gorm:"column:tanggal_persalinan" json:"tanggal_persalinan"`
+	BersalinDi                     *string    `gorm:"column:bersalin_di" json:"bersalin_di"`
+	InisiasiMenyusui               *string    `gorm:"column:inisiasi_menyusui" json:"inisiasi_menyusui"`
+	JenisPersalinan                *string    `gorm:"column:jenis_persalinan" json:"jenis_persalinan"`
+	Indikasi                       *string    `gorm:"column:indikasi" json:"indikasi"`
+	Aterm                          *string    `gorm:"column:aterm" json:"aterm"`
+	Bernafas                       *string    `gorm:"column:bernafas" json:"bernafas"`
+	TanusOtot                      *string    `gorm:"column:tanus_otot" json:"tanus_otot"`
+	CairanAmnion                   *string    `gorm:"column:cairan_amnion" json:"cairan_amnion"`
+	F1                             string     `gorm:"column:f1" json:"f1"`
+	U1                             string     `gorm:"column:u1" json:"u1"`
+	T1                             string     `gorm:"column:t1" json:"t1"`
+	R1                             string     `gorm:"column:r1" json:"r1"`
+	W1                             string     `gorm:"column:w1" json:"w1"`
+	N1                             string     `gorm:"column:n1" json:"n1"`
+	F5                             string     `gorm:"column:f5" json:"f5"`
+	U5                             string     `gorm:"column:u5" json:"u5"`
+	T5                             string     `gorm:"column:t5" json:"t5"`
+	R5                             string     `gorm:"column:r5" json:"r5"`
+	W5                             string     `gorm:"column:w5" json:"w5"`
+	N5                             string     `gorm:"column:n5" json:"n5"`
+	F10                            string     `gorm:"column:f10" json:"f10"`
+	U10                            string     `gorm:"column:u10" json:"u10"`
+	T10                            string     `gorm:"column:t10" json:"t10"`
+	R10                            string     `gorm:"column:r10" json:"r10"`
+	W10                            string     `gorm:"column:w10" json:"w10"`
+	N10                            string     `gorm:"column:n10" json:"n10"`
+	FrekuensiNapas                 *string    `gorm:"column:frekuensi_napas" json:"frekuensi_napas"`
+	NilaiFrekuensiNapas            *int       `gorm:"column:nilai_frekuensi_napas" json:"nilai_frekuensi_napas"`
+	Retraksi                       *string    `gorm:"column:retraksi" json:"retraksi"`
+	NilaiRetraksi                  *int       `gorm:"column:nilai_retraksi" json:"nilai_retraksi"`
+	Sianosis                       *string    `gorm:"column:sianosis" json:"sianosis"`
+	NilaiSianosis                  *int       `gorm:"column:nilai_sianosis" json:"nilai_sianosis"`
+	JalanMasukUdara                *string    `gorm:"column:jalan_masuk_udara" json:"jalan_masuk_udara"`
+	NilaiJalanMasukUdara           *int       `gorm:"column:nilai_jalan_masuk_udara" json:"nilai_jalan_masuk_udara"`
+	Grunting                       *string    `gorm:"column:grunting" json:"grunting"`
+	NilaiGrunting                  *int       `gorm:"column:nilai_grunting" json:"nilai_grunting"`
+	TotalDownScore                 *int       `gorm:"column:total_down_score" json:"total_down_score"`
+	KeteranganDownScore            *string    `gorm:"column:keterangan_down_Score" json:"keterangan_down_Score"`
+	Nadi                           *string    `gorm:"column:nadi" json:"nadi"`
+	Rr                             *string    `gorm:"column:rr" json:"rr"`
+	Suhu                           *string    `gorm:"column:suhu" json:"suhu"`
+	Saturasi                       *string    `gorm:"column:saturasi" json:"saturasi"`
+	Bb                             *string    `gorm:"column:bb" json:"bb"`
+	Pb                             *string    `gorm:"column:pb" json:"pb"`
+	Lk                             *string    `gorm:"column:lk" json:"lk"`
+	Ld                             *string    `gorm:"column:ld" json:"ld"`
+	KeadaanUmum                    string     `gorm:"column:keadaan_umum" json:"keadaan_umum"`
+	KeteranganKeadaanUmum          *string    `gorm:"column:keterangan_keadaan_umum" json:"keterangan_keadaan_umum"`
+	Kulit                          string     `gorm:"column:kulit" json:"kulit"`
+	KeteranganKulit                *string    `gorm:"column:keterangan_kulit" json:"keterangan_kulit"`
+	Kepala                         string     `gorm:"column:kepala" json:"kepala"`
+	KeteranganKepala               *string    `gorm:"column:keterangan_kepala" json:"keterangan_kepala"`
+	Mata                           string     `gorm:"column:mata" json:"mata"`
+	KeteranganMata                 *string    `gorm:"column:keterangan_mata" json:"keterangan_mata"`
+	Telinga                        string     `gorm:"column:telinga" json:"telinga"`
+	KeteranganTelinga              *string    `gorm:"column:keterangan_telinga" json:"keterangan_telinga"`
+	Hidung                         string     `gorm:"column:hidung" json:"hidung"`
+	KeteranganHidung               *string    `gorm:"column:keterangan_hidung" json:"keterangan_hidung"`
+	Mulut                          string     `gorm:"column:mulut" json:"mulut"`
+	KeteranganMulut                *string    `gorm:"column:keterangan_mulut" json:"keterangan_mulut"`
+	Tenggorokan                    string     `gorm:"column:tenggorokan" json:"tenggorokan"`
+	KeteranganTenggorokan          *string    `gorm:"column:keterangan_tenggorokan" json:"keterangan_tenggorokan"`
+	Leher                          string     `gorm:"column:leher" json:"leher"`
+	KeteranganLeher                *string    `gorm:"column:keterangan_leher" json:"keterangan_leher"`
+	Thorax                         string     `gorm:"column:thorax" json:"thorax"`
+	KeteranganThorax               *string    `gorm:"column:keterangan_thorax" json:"keterangan_thorax"`
+	Abdomen                        string     `gorm:"column:abdomen" json:"abdomen"`
+	KeteranganAbdomen              *string    `gorm:"column:keterangan_abdomen" json:"keterangan_abdomen"`
+	Genitalia                      string     `gorm:"column:genitalia" json:"genitalia"`
+	KeteranganGenitalia            *string    `gorm:"column:keterangan_genitalia" json:"keterangan_genitalia"`
+	Anus                           string     `gorm:"column:anus" json:"anus"`
+	KeteranganAnus                 *string    `gorm:"column:keterangan_anus" json:"keterangan_anus"`
+	Muskulos                       string     `gorm:"column:muskulos" json:"muskulos"`
+	KeteranganMuskulos             *string    `gorm:"column:keterangan_muskulos" json:"keterangan_muskulos"`
+	Ekstrimitas                    string     `gorm:"column:ekstrimitas" json:"ekstrimitas"`
+	KeteranganEkstrimitas          *string    `gorm:"column:keterangan_ekstrimitas" json:"keterangan_ekstrimitas"`
+	Paru                           string     `gorm:"column:paru" json:"paru"`
+	KeteranganParu                 *string    `gorm:"column:keterangan_paru" json:"keterangan_paru"`
+	Refleks                        string     `gorm:"column:refleks" json:"refleks"`
+	KeteranganRefleks              *string    `gorm:"column:keterangan_refleks" json:"keterangan_refleks"`
+	KelainanLainnya                *string    `gorm:"column:kelainan_lainnya" json:"kelainan_lainnya"`
+	PemeriksaanRegional            string     `gorm:"column:pemeriksaan_regional" json:"pemeriksaan_regional"`
+	Lab                            string     `gorm:"column:lab" json:"lab"`
+	Radiologi                      string     `gorm:"column:radiologi" json:"radiologi"`
+	Penunjanglainnya               string     `gorm:"column:penunjanglainnya" json:"penunjanglainnya"`
+	Diagnosis                      string     `gorm:"column:diagnosis" json:"diagnosis"`
+	Tata                           string     `gorm:"column:tata" json:"tata"`
+	Edukasi                        string     `gorm:"column:edukasi" json:"edukasi"`
+}
+
+func (PenilaianMedisRanapNeonatus) TableName() string {
+	return "penilaian_medis_ranap_neonatus"
+}
