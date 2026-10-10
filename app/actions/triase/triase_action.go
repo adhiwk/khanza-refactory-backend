@@ -8,8 +8,10 @@ import (
 
 	contractsorm "github.com/goravel/framework/contracts/database/orm"
 
+	cetakmodel "goravel/app/models/cetak"
 	model "goravel/app/models/triase"
 	repo "goravel/app/repository/triase"
+	cetaksvc "goravel/app/services/cetak"
 	"goravel/app/support"
 )
 
@@ -41,11 +43,49 @@ type Actor struct {
 }
 
 type Action struct {
-	repo repo.Repository
+	repo  repo.Repository
+	cetak *cetaksvc.Service
 }
 
-func NewAction(repo repo.Repository) *Action {
-	return &Action{repo: repo}
+func NewAction(repo repo.Repository, cetak *cetaksvc.Service) *Action {
+	return &Action{repo: repo, cetak: cetak}
+}
+
+// Cetak lembar triase IGD.
+func (a *Action) Cetak(noRawat string) (*cetakmodel.Dokumen, error) {
+	t, err := a.Detail(noRawat)
+	if err != nil {
+		return nil, err
+	}
+	dok, err := a.cetak.Dokumen("Triase Instalasi Gawat Darurat", "")
+	if err != nil {
+		return nil, err
+	}
+	if dok.Identitas, err = a.cetak.IdentitasRawat(t.NoRawat); err != nil {
+		return nil, err
+	}
+	dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: "Data Kedatangan & Tanda Vital",
+		Baris: a.cetak.Baris(t.Utama, map[string]bool{"no_rawat": true, "kode_kasus": true}, nil)})
+	if p := t.Penilaian; p != nil {
+		judul, keluhan := "Triase Primer (Zona Merah)", "Keluhan Utama"
+		if t.Jenis == model.Sekunder {
+			judul, keluhan = "Triase Sekunder", "Anamnesa Singkat"
+		}
+		baris := []cetakmodel.Baris{{Label: keluhan, Nilai: cetaksvc.Format(p.Keluhan)}}
+		if t.Jenis == model.Primer {
+			baris = append(baris, cetakmodel.Baris{Label: "Kebutuhan Khusus", Nilai: cetaksvc.Format(p.KebutuhanKhusus)})
+		}
+		baris = append(baris, cetakmodel.Baris{Label: "Catatan", Nilai: cetaksvc.Format(p.Catatan)},
+			cetakmodel.Baris{Label: "Keputusan", Nilai: cetaksvc.Format(p.Plan)}, cetakmodel.Baris{Label: "Tanggal Triase", Nilai: cetaksvc.Format(p.TanggalTriase)})
+		dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: judul, Baris: baris})
+		dok.TandaTangan = []cetakmodel.TandaTangan{{Peran: "Petugas Triase", Nama: p.NmPetugas, Kode: p.Nik}}
+	}
+	tabel := &cetakmodel.Tabel{Kolom: []string{"Pemeriksaan", "Kode", "Pengkajian Skala " + fmt.Sprint(t.Skala.Level)}}
+	for _, it := range t.Skala.Items {
+		tabel.Isi = append(tabel.Isi, []string{it.NamaPemeriksaan, it.Kode, it.Pengkajian})
+	}
+	dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: "Skala Triase", Tabel: tabel})
+	return dok, nil
 }
 
 func (a *Action) List(f repo.Filter, page, limit int) ([]model.Ringkas, int64, error) {

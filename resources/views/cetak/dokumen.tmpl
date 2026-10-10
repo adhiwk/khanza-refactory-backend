@@ -1,0 +1,59 @@
+{{ define "cetak/dokumen.tmpl" }}<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>{{ .Judul }}{{ if .Nomor }} - {{ .Nomor }}{{ end }}</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  * { box-sizing: border-box; }
+  body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; color: #000; margin: 0; padding: 12px; }
+  .kop { display: flex; align-items: center; gap: 12px; border-bottom: 3px double #000; padding-bottom: 6px; }
+  .kop img { height: 60px; }
+  .kop .nama { font-size: 16px; font-weight: bold; text-transform: uppercase; }
+  .judul { text-align: center; font-size: 13px; font-weight: bold; margin: 10px 0 2px; text-decoration: underline; }
+  .nomor { text-align: center; margin-bottom: 8px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 8px; }
+  td, th { padding: 3px 5px; vertical-align: top; }
+  .kv td.l { width: 30%; white-space: nowrap; }
+  .kv td.s { width: 8px; }
+  .grid th, .grid td { border: 1px solid #000; }
+  .grid th { background: #eee; }
+  .bagian { font-weight: bold; background: #eee; padding: 3px 5px; margin-top: 6px; border: 1px solid #000; }
+  .bagian + table.kv { border: 1px solid #000; border-top: 0; }
+  .ttd { display: flex; justify-content: flex-end; gap: 40px; margin-top: 24px; page-break-inside: avoid; }
+  .ttd div { text-align: center; min-width: 180px; }
+  .ttd .nm { margin-top: 56px; font-weight: bold; text-decoration: underline; }
+  .kaki { margin-top: 12px; font-size: 9px; color: #555; }
+  @media print { .noprint { display: none; } body { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="noprint" style="text-align:right;margin-bottom:8px"><button onclick="window.print()">Cetak</button></div>
+<div class="kop">
+  {{ if .Instansi.Logo }}<img src="{{ .Instansi.Logo }}" alt="logo">{{ end }}
+  <div>
+    <div class="nama">{{ .Instansi.Nama }}</div>
+    <div>{{ .Instansi.Alamat }}{{ if .Instansi.Kabupaten }}, {{ .Instansi.Kabupaten }}{{ end }}{{ if .Instansi.Propinsi }}, {{ .Instansi.Propinsi }}{{ end }}</div>
+    <div>{{ .Instansi.Kontak }}{{ if .Instansi.Email }} &middot; {{ .Instansi.Email }}{{ end }}</div>
+  </div>
+</div>
+<div class="judul">{{ .Judul }}</div>
+{{ if .Nomor }}<div class="nomor">No. {{ .Nomor }}</div>{{ end }}
+{{ if .Identitas }}
+<table class="kv">{{ range .Identitas }}<tr><td class="l">{{ .Label }}</td><td class="s">:</td><td>{{ .Nilai }}</td></tr>{{ end }}</table>
+{{ end }}
+{{ range .Bagian }}
+  {{ if .Judul }}<div class="bagian">{{ .Judul }}</div>{{ end }}
+  {{ if .Baris }}<table class="kv">{{ range .Baris }}<tr><td class="l">{{ .Label }}</td><td class="s">:</td><td>{{ .Nilai }}</td></tr>{{ end }}</table>{{ end }}
+  {{ with .Tabel }}
+  <table class="grid"><thead><tr>{{ range .Kolom }}<th>{{ . }}</th>{{ end }}</tr></thead>
+  <tbody>{{ range .Isi }}<tr>{{ range . }}<td>{{ . }}</td>{{ end }}</tr>{{ end }}</tbody></table>
+  {{ end }}
+{{ end }}
+{{ if .TandaTangan }}
+<div class="ttd">{{ range .TandaTangan }}<div><div>{{ .Peran }}</div><div class="nm">{{ .Nama }}</div><div>{{ .Kode }}</div></div>{{ end }}</div>
+{{ end }}
+<div class="kaki">Dicetak {{ .Dicetak }}</div>
+</body>
+</html>
+{{ end }}
