@@ -10,7 +10,7 @@ import (
 	"goravel/app/modules/rbac"
 )
 
-// registerRekamMedisAsesmenRoutes /rekam-medis/<form>: GET (list), GET /detail, POST, PUT, DELETE; kunci lewat query string.
+// registerRekamMedisAsesmenRoutes /rekam-medis/<form>: GET (list), GET /detail, GET /cetak, POST, PUT, DELETE; kunci lewat query string.
 func registerRekamMedisAsesmenRoutes(router route.Router) {
 	perm := rbac.RequirePermission
 	reg := func(slug string, c rmctrl.Handler) {
@@ -20,6 +20,7 @@ func registerRekamMedisAsesmenRoutes(router route.Router) {
 		router.Middleware(perm("rekam_medis.create")).Post(p, c.Store)
 		router.Middleware(perm("rekam_medis.update")).Put(p, c.Update)
 		router.Middleware(perm("rekam_medis.delete")).Delete(p, c.Destroy)
+		router.Middleware(perm("rekam_medis.view")).Get(p+"/cetak", c.Cetak)
 	}
 	reg("admisi-skoring-tolac", rmctrl.NewController(rmaction.FormAdmisiSkoringTolac, func() rmreq.StoreRequest[rmreq.AdmisiSkoringTolacData] { return &rmreq.AdmisiSkoringTolacStore{} }, func() rmreq.UpdateRequest[rmreq.AdmisiSkoringTolacData] { return &rmreq.AdmisiSkoringTolacUpdate{} }))
 	reg("catatan-adime-gizi", rmctrl.NewController(rmaction.FormCatatanAdimeGizi, func() rmreq.StoreRequest[rmreq.CatatanAdimeGiziData] { return &rmreq.CatatanAdimeGiziStore{} }, func() rmreq.UpdateRequest[rmreq.CatatanAdimeGiziData] { return &rmreq.CatatanAdimeGiziUpdate{} }))

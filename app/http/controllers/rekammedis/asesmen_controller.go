@@ -6,7 +6,9 @@ import (
 	action "goravel/app/actions/rekammedis"
 	"goravel/app/http/controllers"
 	request "goravel/app/http/requests/rekammedis"
+	cetakrepo "goravel/app/repository/cetak"
 	repo "goravel/app/repository/rekammedis"
+	cetaksvc "goravel/app/services/cetak"
 	"goravel/app/support"
 )
 
@@ -17,6 +19,7 @@ type Handler interface {
 	Store(ctx http.Context) http.Response
 	Update(ctx http.Context) http.Response
 	Destroy(ctx http.Context) http.Response
+	Cetak(ctx http.Context) http.Response
 }
 
 // Controller form asesmen; no_rawat mengandung "/", sehingga kunci dikirim lewat query string.
@@ -29,7 +32,7 @@ type Controller[M any, D any] struct {
 
 func NewController[M any, D any](form *action.Form[M, D], newStore func() request.StoreRequest[D], newUpdate func() request.UpdateRequest[D]) *Controller[M, D] {
 	return &Controller[M, D]{
-		action:    action.NewAction(form, repo.NewRepository[M](form.Spec)),
+		action:    action.NewAction(form, repo.NewRepository[M](form.Spec), cetaksvc.NewService(cetakrepo.NewRepository())),
 		newStore:  newStore,
 		newUpdate: newUpdate,
 	}
@@ -89,6 +92,15 @@ func (c *Controller[M, D]) Destroy(ctx http.Context) http.Response {
 		return c.ResponseActionError(ctx, "Gagal menghapus "+c.action.Form().Label, err)
 	}
 	return c.ResponseSuccess(ctx, c.action.Form().Label+" berhasil dihapus", nil)
+}
+
+// Cetak dokumen HTML siap cetak; kunci lewat query string seperti Show.
+func (c *Controller[M, D]) Cetak(ctx http.Context) http.Response {
+	dok, err := c.action.Cetak(c.key(ctx))
+	if err != nil {
+		return c.ResponseActionError(ctx, "Gagal mencetak "+c.action.Form().Label, err)
+	}
+	return c.ResponseCetak(ctx, dok)
 }
 
 func (c *Controller[M, D]) key(ctx http.Context) repo.Key {

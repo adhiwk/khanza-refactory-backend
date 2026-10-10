@@ -117,3 +117,8 @@ func (c *BaseController) KodePegawai(ctx http.Context) string {
 	}
 	return list[0].Kd
 }
+
+// ResponseCetak merender dokumen cetak HTML (resources/views/cetak/dokumen.tmpl).
+func (c *BaseController) ResponseCetak(ctx http.Context, dokumen any) http.Response {
+	return ctx.Response().View().Make("cetak/dokumen.tmpl", dokumen)
+}

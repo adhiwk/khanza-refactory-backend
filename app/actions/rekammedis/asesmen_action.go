@@ -12,7 +12,9 @@ import (
 
 	contractsorm "github.com/goravel/framework/contracts/database/orm"
 
+	cetakmodel "goravel/app/models/cetak"
 	repo "goravel/app/repository/rekammedis"
+	cetaksvc "goravel/app/services/cetak"
 	"goravel/app/support"
 )
 
@@ -61,13 +63,58 @@ type Record[M any] struct {
 }
 
 type Action[M any, D any] struct {
-	form *Form[M, D]
-	repo repo.Store[M]
-	now  func() time.Time
+	form  *Form[M, D]
+	repo  repo.Store[M]
+	cetak *cetaksvc.Service
+	now   func() time.Time
 }
 
-func NewAction[M any, D any](form *Form[M, D], store repo.Store[M]) *Action[M, D] {
-	return &Action[M, D]{form: form, repo: store, now: time.Now}
+func NewAction[M any, D any](form *Form[M, D], store repo.Store[M], cetak *cetaksvc.Service) *Action[M, D] {
+	return &Action[M, D]{form: form, repo: store, cetak: cetak, now: time.Now}
+}
+
+// tabelPetugas tabel referensi yang menandakan kolom petugas pengisi (tanda tangan).
+var tabelPetugas = map[string]string{"dokter": "Dokter", "petugas": "Petugas", "pegawai": "Petugas"}
+
+// Cetak dokumen asesmen: identitas rawat, isi form, kode detail beserta nama, tanda tangan petugas.
+func (a *Action[M, D]) Cetak(key repo.Key) (*cetakmodel.Dokumen, error) {
+	m, err := a.find(key)
+	if err != nil {
+		return nil, err
+	}
+	k := a.form.KeyOf(m)
+	dok, err := a.cetak.Dokumen(a.form.Label, "")
+	if err != nil {
+		return nil, err
+	}
+	if dok.Identitas, err = a.cetak.IdentitasRawat(k["no_rawat"]); err != nil {
+		return nil, err
+	}
+	refs := make([]cetaksvc.Ref, len(a.form.Refs))
+	for i, r := range a.form.Refs {
+		refs[i] = cetaksvc.Ref{Column: r.Column, Table: r.Table, RefCol: r.RefCol}
+		if peran, ok := tabelPetugas[r.Table]; ok {
+			if v := r.Value(m); v != nil {
+				dok.TandaTangan = append(dok.TandaTangan, cetakmodel.TandaTangan{
+					Peran: peran + " (" + cetaksvc.Label(r.Column) + ")", Nama: a.cetak.Nama(r.Table, r.RefCol, v), Kode: fmt.Sprint(v)})
+			}
+		}
+	}
+	dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: "Hasil " + a.form.Label, Baris: a.cetak.Baris(m, map[string]bool{"no_rawat": true}, refs)})
+	if len(a.form.Spec.Details) > 0 {
+		details, err := a.repo.Details(k["no_rawat"])
+		if err != nil {
+			return nil, err
+		}
+		for _, d := range a.form.Spec.Details {
+			t := &cetakmodel.Tabel{Kolom: []string{"Kode", "Uraian"}}
+			for _, kode := range details[d.Name] {
+				t.Isi = append(t.Isi, []string{kode, a.cetak.Nama(d.RefTable, d.RefColumn, kode)})
+			}
+			dok.Bagian = append(dok.Bagian, cetakmodel.Bagian{Judul: cetaksvc.Label(strings.TrimPrefix(d.Name, "kode_")) + " Keperawatan", Tabel: t})
+		}
+	}
+	return dok, nil
 }
 
 func (a *Action[M, D]) Form() *Form[M, D] {

@@ -7,7 +7,9 @@ import (
 	"goravel/app/http/controllers"
 	request "goravel/app/http/requests/triase"
 	model "goravel/app/models/triase"
+	cetakrepo "goravel/app/repository/cetak"
 	repo "goravel/app/repository/triase"
+	cetaksvc "goravel/app/services/cetak"
 	"goravel/app/support"
 )
 
@@ -17,7 +19,7 @@ type Controller struct {
 }
 
 func NewController() *Controller {
-	return &Controller{action: action.NewAction(repo.NewRepository())}
+	return &Controller{action: action.NewAction(repo.NewRepository(), cetaksvc.NewService(cetakrepo.NewRepository()))}
 }
 
 // Index ?tgl_awal=&tgl_akhir=&search=
@@ -73,6 +75,15 @@ func (c *Controller) Destroy(ctx http.Context) http.Response {
 		return c.ResponseActionError(ctx, "Gagal menghapus triase", err)
 	}
 	return c.ResponseSuccess(ctx, "Triase berhasil dihapus", nil)
+}
+
+// Cetak ?no_rawat=
+func (c *Controller) Cetak(ctx http.Context) http.Response {
+	dok, err := c.action.Cetak(ctx.Request().Query("no_rawat"))
+	if err != nil {
+		return c.ResponseActionError(ctx, "Gagal mencetak triase", err)
+	}
+	return c.ResponseCetak(ctx, dok)
 }
 
 func (c *Controller) actor(ctx http.Context) action.Actor {
