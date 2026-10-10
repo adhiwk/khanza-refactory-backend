@@ -11,20 +11,21 @@ import (
 	regrequest "goravel/app/http/requests/registrasi"
 	regmodel "goravel/app/models/registrasi"
 	regrepo "goravel/app/repository/registrasi"
+	"goravel/app/support"
 )
 
 var (
-	ErrNotFound           = errors.New("data registrasi tidak ditemukan")
-	ErrPasienNotFound     = errors.New("data pasien tidak ditemukan")
-	ErrDokterNotFound     = errors.New("data dokter tidak ditemukan")
-	ErrPoliNotFound       = errors.New("data poliklinik tidak ditemukan")
-	ErrPenjabNotFound     = errors.New("data jenis bayar tidak ditemukan")
-	ErrDirawatInap        = errors.New("pasien sedang dalam masa perawatan di kamar inap")
-	ErrLocked             = errors.New("data billing sudah terverifikasi / registrasi batal, data tidak boleh diubah")
-	ErrExpired            = errors.New("perubahan data / penghapusan data tidak boleh lebih dari 2 x 24 jam")
-	ErrInvalidDate        = errors.New("format tanggal harus YYYY-MM-DD")
-	ErrInvalidTime        = errors.New("format jam harus HH:MM:SS")
-	ErrNomorTidakTersedia = errors.New("gagal membuat no rawat, silakan coba lagi")
+	ErrNotFound           = support.NotFound("data registrasi tidak ditemukan")
+	ErrPasienNotFound     = support.NotFound("data pasien tidak ditemukan")
+	ErrDokterNotFound     = support.NotFound("data dokter tidak ditemukan")
+	ErrPoliNotFound       = support.NotFound("data poliklinik tidak ditemukan")
+	ErrPenjabNotFound     = support.NotFound("data jenis bayar tidak ditemukan")
+	ErrDirawatInap        = support.Conflict("pasien sedang dalam masa perawatan di kamar inap")
+	ErrLocked             = support.Conflict("data billing sudah terverifikasi / registrasi batal, data tidak boleh diubah")
+	ErrExpired            = support.Forbidden("perubahan data / penghapusan data tidak boleh lebih dari 2 x 24 jam")
+	ErrInvalidDate        = support.Invalid("format tanggal harus YYYY-MM-DD")
+	ErrInvalidTime        = support.Invalid("format jam harus HH:MM:SS")
+	ErrNomorTidakTersedia = support.Conflict("gagal membuat no rawat, silakan coba lagi")
 )
 
 // maxAttempt jumlah percobaan simpan bila no_rawat bentrok (DlgReg mencoba 5 kali).
@@ -134,6 +135,18 @@ func (a *Action) Create(noRkmMedis string, data regrequest.RegistrasiData) (*reg
 		facades.Log().Errorf("registrasi: gagal update umur pasien %s: %v", noRkmMedis, err)
 	}
 	return reg, nil
+}
+
+// KdPoliIGD kode unit IGD yang dipakai DlgIGD.
+const KdPoliIGD = "IGDK"
+
+// CreateIGD registrasi IGD (DlgIGD): sama dengan registrasi poli dengan kd_poli IGDK; unit IGD dibuat bila belum ada.
+func (a *Action) CreateIGD(noRkmMedis string, data regrequest.RegistrasiData) (*regmodel.RegPeriksa, error) {
+	if err := a.repo.EnsurePoli(KdPoliIGD, "Unit IGD"); err != nil {
+		return nil, err
+	}
+	data.KdPoli = KdPoliIGD
+	return a.Create(noRkmMedis, data)
 }
 
 // Update mengikuti BtnEdit + ganti di DlgReg; no_rawat, no_reg & pasien tidak berubah.

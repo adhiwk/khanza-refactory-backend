@@ -20,5 +20,9 @@ func Api() {
 		registerObatRoutes(router)
 		registerPasienRoutes(router)
 		registerRegistrasiRoutes(router)
+		registerMasterRoutes(router)
+		registerPelayananRoutes(router)
+		registerFarmasiMasterRoutes(router)
+		registerBillingRoutes(router)
 	})
 }

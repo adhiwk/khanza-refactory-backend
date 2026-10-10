@@ -1,8 +1,6 @@
 package pasien
 
 import (
-	"errors"
-
 	pasienaction "goravel/app/actions/pasien"
 	pasienrequest "goravel/app/http/requests/pasien"
 	pasienrepo "goravel/app/repository/pasien"
@@ -50,7 +48,7 @@ func (c *Controller) Index(ctx http.Context) http.Response {
 func (c *Controller) Show(ctx http.Context) http.Response {
 	data, err := c.action.Detail(ctx.Request().Route("no_rkm_medis"))
 	if err != nil {
-		return c.actionError(ctx, "Gagal mengambil pasien", err)
+		return c.ResponseActionError(ctx, "Gagal mengambil pasien", err)
 	}
 
 	return c.ResponseSuccess(ctx, "Detail pasien berhasil diambil", data)
@@ -68,7 +66,7 @@ func (c *Controller) Store(ctx http.Context) http.Response {
 
 	result, err := c.action.Create(req.NoRkmMedis, req.PasienData)
 	if err != nil {
-		return c.actionError(ctx, "Gagal membuat pasien", err)
+		return c.ResponseActionError(ctx, "Gagal membuat pasien", err)
 	}
 
 	return c.ResponseCreated(ctx, "Pasien berhasil dibuat", result)
@@ -86,7 +84,7 @@ func (c *Controller) Update(ctx http.Context) http.Response {
 
 	result, err := c.action.Update(ctx.Request().Route("no_rkm_medis"), req.PasienData)
 	if err != nil {
-		return c.actionError(ctx, "Gagal memperbarui pasien", err)
+		return c.ResponseActionError(ctx, "Gagal memperbarui pasien", err)
 	}
 
 	return c.ResponseSuccess(ctx, "Pasien berhasil diperbarui", result)
@@ -94,22 +92,8 @@ func (c *Controller) Update(ctx http.Context) http.Response {
 
 func (c *Controller) Destroy(ctx http.Context) http.Response {
 	if err := c.action.Delete(ctx.Request().Route("no_rkm_medis")); err != nil {
-		return c.actionError(ctx, "Gagal menghapus pasien", err)
+		return c.ResponseActionError(ctx, "Gagal menghapus pasien", err)
 	}
 
 	return c.ResponseSuccess(ctx, "Pasien berhasil dihapus", nil)
-}
-
-// actionError memetakan error domain dari action ke HTTP status.
-func (c *Controller) actionError(ctx http.Context, message string, err error) http.Response {
-	switch {
-	case errors.Is(err, pasienaction.ErrNotFound):
-		return c.ResponseError(ctx, http.StatusNotFound, err.Error(), nil)
-	case errors.Is(err, pasienaction.ErrAlreadyExists):
-		return c.ResponseError(ctx, http.StatusConflict, err.Error(), nil)
-	case errors.Is(err, pasienaction.ErrInvalidDate):
-		return c.ResponseError(ctx, http.StatusUnprocessableEntity, err.Error(), nil)
-	default:
-		return c.ResponseError(ctx, http.StatusInternalServerError, message, err.Error())
-	}
 }

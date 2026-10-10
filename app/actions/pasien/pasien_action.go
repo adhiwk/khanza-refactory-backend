@@ -1,19 +1,19 @@
 package pasien
 
 import (
-	"errors"
 	"strings"
 	"time"
 
 	pasienrequest "goravel/app/http/requests/pasien"
 	pasienmodel "goravel/app/models/pasien"
 	pasienrepo "goravel/app/repository/pasien"
+	"goravel/app/support"
 )
 
 var (
-	ErrNotFound      = errors.New("data pasien tidak ditemukan")
-	ErrAlreadyExists = errors.New("no rekam medis sudah digunakan")
-	ErrInvalidDate   = errors.New("format tanggal harus YYYY-MM-DD")
+	ErrNotFound      = support.NotFound("data pasien tidak ditemukan")
+	ErrAlreadyExists = support.Conflict("no rekam medis sudah digunakan")
+	ErrInvalidDate   = support.Invalid("format tanggal harus YYYY-MM-DD")
 )
 
 type Action struct {
