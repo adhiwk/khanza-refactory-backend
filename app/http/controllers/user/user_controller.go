@@ -114,3 +114,17 @@ func (c *Controller) Destroy(ctx http.Context) http.Response {
 
 	return c.ResponseSuccess(ctx, "User berhasil dihapus", nil)
 }
+
+// SetPegawai PUT /users/{id}/pegawai
+func (c *Controller) SetPegawai(ctx http.Context) http.Response {
+	var req userrequest.PegawaiRequest
+	if resp := c.Validate(ctx, &req); resp != nil {
+		return resp
+	}
+	id, _ := strconv.Atoi(ctx.Request().Route("id"))
+	data, err := c.action.SetPegawai(uint(id), req.KdPegawai)
+	if err != nil {
+		return c.ResponseActionError(ctx, "Gagal menghubungkan pegawai", err)
+	}
+	return c.ResponseSuccess(ctx, "Pegawai user berhasil diperbarui", data)
+}

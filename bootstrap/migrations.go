@@ -12,5 +12,6 @@ func Migrations() []schema.Migration {
 		&migrations.M20261002084546CreateUsersTable{},
 		&migrations.M20261003000001CreateRbacTables{},
 		&migrations.M20261007000001CreatePasienTable{},
+		&migrations.M20261011000001AddKdPegawaiToUsersTable{},
 	}
 }

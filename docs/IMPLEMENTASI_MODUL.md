@@ -52,6 +52,46 @@ saat dihapus seperti form Khanza. Dokter wajib terdaftar sebagai pegawai (FK `pe
 jenis, kategori, golongan, satuan, industri, metode-racik; `/obat/{kode_brng}` (databarang): hapus = nonaktif (`status='0'`) seperti DlgBarang,
 `PATCH /obat/{kode_brng}/status` untuk aktif/nonaktif, filter list `status`, `kdjns`, `kode_kategori`, `kode_golongan` (tanpa `status` = hanya aktif).
 
+### Rekam medis (`rekam_medis.*`) — `/rekam-medis/...`
+Sumber `source/src/rekammedis`. Akun dihubungkan ke pegawai Khanza lewat `PUT /users/{id}/pegawai` (`users.kd_pegawai`,
+pengganti `akses.getkode()`).
+
+- **185 form asesmen** (penilaian awal medis/keperawatan, skrining, checklist, hasil pemeriksaan, catatan observasi, resume, dll.):
+  `GET /rekam-medis/{form}` (filter `no_rawat`, `no_rkm_medis`, `tgl_awal`/`tgl_akhir`, `search`), `GET /rekam-medis/{form}/detail`,
+  `POST`, `PUT`, `DELETE` — kunci (`no_rawat` + `tanggal` / `tgl_perawatan`+`jam_rawat` bila ada) lewat query string.
+  Daftar form: `GET /rekam-medis/forms`. Form dengan masalah/rencana keperawatan menerima `kode_masalah[]`/`kode_rencana[]`.
+  Aturan (sama dengan form Khanza): registrasi harus ada, waktu ≥ registrasi, petugas = akun sendiri,
+  ubah/hapus hanya oleh petugas pengisi & ≤ 2 × 24 jam; Admin Utama (super admin) bebas. FK diperiksa dengan pesan jelas.
+  Engine generik: `app/{actions,repository,http/controllers}/rekammedis/asesmen_*`; model/request/descriptor per form
+  dibangkitkan oleh `tools/rekammedis_gen` (jangan disunting manual).
+- **Diagnosa & prosedur** (PanelDiagnosa): `/rekam-medis/diagnosa`, `/rekam-medis/prosedur` (+ `/referensi`, `PATCH /diagnosa/status-penyakit`).
+  Status penyakit Lama/Baru otomatis dari riwayat pasien; kode utama/sekunder resume diselaraskan menurut prioritas.
+- **Riwayat rekam medis** (RMRiwayatPerawatan): `GET /rekam-medis/riwayat?no_rkm_medis=` — per kunjungan: diagnosa, prosedur,
+  SOAP, tindakan, obat, kamar, dan daftar form asesmen yang terisi.
+
+- **Triase IGD** (RMTriaseIGD) — `/igd/triase` (+ `/detail`), kunci `no_rawat` lewat query string; permission `igd.*`.
+  Satu triase per rawat: `jenis` primer (skala 1/2, Ruang Resusitasi/Ruang Kritis) atau sekunder (skala 3/4/5, Zona Kuning/Hijau),
+  vital sign wajib, minimal satu kode skala; utama + primer/sekunder + detail skala disimpan dalam satu transaksi.
+  Ubah/hapus hanya oleh petugas triase (nik) kecuali super admin. Kolom id SatuSehat (`id_observation_*`) dipertahankan saat ubah.
+- **Master kode rekam medis** — `/rekam-medis/master/{slug}` (`masterdata.*`): masalah keperawatan (umum, anak, geriatri, gigi, IGD,
+  mata, neonatus, psikiatri), masalah MPP, rencana keperawatan (8 jenis, induk = masalah), triase macam kasus, pemeriksaan triase,
+  skala triase 1–5 (induk = pemeriksaan), imunisasi. Bentuk seragam `{kode, nama, kode_induk, nama_induk}`, filter `kode_induk`;
+  kode kosong dibuat otomatis (3 digit). **Hapus ditolak bila kode masih dipakai**: foreign key Khanza ke tabel-tabel ini
+  `ON DELETE CASCADE`, sehingga hapus langsung (perilaku form Java) ikut menghapus data asesmen pasien & master turunan.
+
+- **Rekonsiliasi obat** (RMRekonsiliasiObat, RMCariRekonsiliasiObat) — `/rekam-medis/rekonsiliasi-obat[/{no}]`, nomor otomatis
+  `RO`+yyyyMMdd+4 digit; daftar obat wajib; petugas = akun sendiri (non super admin). Konfirmasi farmasi
+  `PUT .../{no}/konfirmasi` (permission `rekonsiliasi.konfirmasi`); rekonsiliasi yang sudah dikonfirmasi hanya boleh diubah/dihapus
+  pemegang hak konfirmasi atau super admin.
+- **Master template** — `/rekam-medis/template/{hasil-radiologi|laporan-operasi|informasi-edukasi|pemeriksaan-dokter}[/{no_template}]`:
+  nomor otomatis `R`+4, `O`+4, `E`+3, `TPD`+16 (angka terbesar + 1, bukan jumlah baris seperti Valid.autoNomer).
+  Template pemeriksaan dokter memuat SOAP + diagnosa (ICD-10, urut), prosedur (ICD-9), permintaan radiologi, permintaan lab
+  beserta item `id_template` (harus milik pemeriksaan lab tsb.), resep, racikan + detail, tindakan — semua kode divalidasi,
+  disimpan/diganti dalam satu transaksi; ubah/hapus hanya oleh dokter pemilik (kd_dokter) kecuali super admin.
+
+Belum: skrining rawat jalan per no_rkm_medis, form yang menyimpan riwayat persalinan/imunisasi pasien (tabel tingkat pasien),
+cetak laporan (jasper).
+
 ### Billing (`billing.*`) — `/billing/...`
 - `GET /billing/tagihan?no_rawat=` rincian per kategori (registrasi, tindakan ralan/ranap, obat, obat operasi, obat langsung,
   laborat, detail laborat, radiologi, operasi, kamar, tambahan, potongan) + deposit & sisa tagihan.
@@ -65,14 +105,15 @@ jenis, kategori, golongan, satuan, industri, metode-racik; `/obat/{kode_brng}` (
 - Pindah kamar mode 4: bila tarif lama = tarif baru Java menagih 0 (tidak ada cabang `==`); di sini memakai tarif tertinggi (`max`).
 - Pindah kamar mode 1/3/4 menolak waktu pindah ≤ waktu masuk (bentrok primary key `kamar_inap`).
 - Primary key master tidak bisa diubah lewat update (REST); form Khanza mengizinkan ganti kode.
-- Operator jurnal/riwayat dicatat sebagai `USER <id>` karena user API belum dipetakan ke `pegawai`/kode Khanza.
-- Aturan "hanya pemeriksa sendiri yang boleh mengisi" (akses.getkode) belum diterapkan karena alasan yang sama.
+- Operator jurnal/riwayat stok dicatat sebagai `USER <id>`.
+- Aturan "hanya petugas sendiri" sudah diterapkan di rekam medis (`users.kd_pegawai`); modul tindakan/pemeriksaan belum memakainya.
+- Diagnosa: kode utama/sekunder resume diselaraskan dari seluruh diagnosa menurut prioritas (Java: urutan satu kali simpan).
 
 ## Belum diport (roadmap)
 Prioritas berikutnya bila modul ini dilanjutkan:
 1. Simpan nota/kasir: DlgBilingRalan/DlgBilingRanap (insert `billing`, `nota_jalan`/`nota_inap`, `detail_nota_*`, piutang, jurnal penutup).
 2. Laboratorium & radiologi (DlgPeriksaLaboratorium*, DlgPeriksaRadiologi) dan operasi (DlgTagihanOperasi).
 3. Inventory farmasi: pemesanan/penerimaan, retur, mutasi, opname, penjualan bebas, resep racikan, validasi resep.
-4. Diagnosa & prosedur (ICD), pemberian diet, rekam medis (`rekammedis/`, 247 form).
+4. Pemberian diet; sisa rekam medis (triase IGD, rekonsiliasi obat, master keperawatan/template).
 5. Keuangan umum (jurnal manual, kas, piutang/hutang), kepegawaian, inventaris, IPSRS, dapur, laporan.
 6. Bridging (BPJS VClaim/PCare/SatuSehat, dll.) — 288 form di `source/src/bridging`.
